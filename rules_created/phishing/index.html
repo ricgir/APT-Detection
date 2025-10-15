@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Phishing - APT Detection using ELK Stack</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Phishing";
+        var mkdocs_page_input_path = "rules_created/phishing.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> APT Detection using ELK Stack
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Introduction</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../overall_workflow/">Overall Workflow</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../apt_lifecycle/">APT lifecycle</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Setup</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../setup/elk_setup/">ELK</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../setup/vm_setup/">Virtual Machine</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../setup/art_setup/">Atomic Red Team</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Rules created</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../active_scanning/">Active Scanning</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Phishing</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#description">Description</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#rule-derivation-from-log-analysis">Rule Derivation from Log Analysis</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#1-defining-the-behavior">1. Defining the Behavior:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#2-translating-behavior-to-log-fields">2. Translating Behavior to Log Fields:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#3-constructing-the-rule">3. Constructing the Rule:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#detection-logic">Detection Logic</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#query">Query:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#breakdown">Breakdown:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#simulation-and-validation">Simulation and Validation</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#atomic-red-team-test-procedure">Atomic Red Team Test Procedure:</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../command_and_scripting_interpreter/">Command and Scripting Interpreter</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../boot_or_logon_autostart_execution/">Boot or Logon Autostart Execution</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../abuse_elevation_control_mechanism/">Abuse Elevation Control Mechanism</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../obfuscated_files_or_information/">Obfuscated Files or Information</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../os_credential_dumping/">OS Credential Dumping</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../system_information_discovery/">System Information Discovery</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../remote_services/">Remote Services</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../automated_collection/">Automated Collection</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../application_layer_protocol/">Application Layer Protocol</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../exfiltration_over_alternative_protocol/">Exfiltration Over Alternative Protocol</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">APT Detection using ELK Stack</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Rules created</li>
+      <li class="breadcrumb-item active">Phishing</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="detection-rule-initial-access-via-phishing">Detection Rule: Initial Access via Phishing</h1>
+<p>Rule ID: 51bac7dd-1389-4819-8812-50dc46744934</p>
+<p>Rule Name: <strong>Initial Access (T1566: Phishing)</strong></p>
+<p>MITRE ATT&amp;CK Tactic: <a href="https://attack.mitre.org/tactics/TA0001/">Initial Access</a></p>
+<p>MITRE ATT&amp;CK Technique: <a href="https://attack.mitre.org/techniques/T1566/">T1566, Phishing</a></p>
+<h2 id="description">Description</h2>
+<p>This rule detects a common initial access pattern where a Microsoft Office application (Word, Excel, etc.) launches a command-line or scripting interpreter. This behavior is highly indicative of a successful phishing attack where a user has opened a malicious document containing embedded macros or exploits.</p>
+<p>Adversaries use this technique to gain an initial foothold on a system. The script executed by the Office application typically serves as a "dropper" or "downloader" to fetch the next stage of the malware payload from an external server.</p>
+<h2 id="rule-derivation-from-log-analysis">Rule Derivation from Log Analysis</h2>
+<p>The logic for this rule is based on identifying anomalous parent-child process relationships. Benign usage of Microsoft Office almost never involves the direct creation of a script interpreter.</p>
+<h3 id="1-defining-the-behavior"><strong>1. Defining the Behavior</strong>:</h3>
+<p>The core of the attack is an Office application executing malicious code. In system process logs, this action is recorded as the Office process (e.g., winword.exe) starting a new, separate process, such as powershell.exe. The Office application is the parent, and the script interpreter is the child.</p>
+<h3 id="2-translating-behavior-to-log-fields"><strong>2. Translating Behavior to Log Fields</strong>:</h3>
+<p>This relationship is directly observable in log data:</p>
+<p>The parent process is identified by the process.parent.name field.</p>
+<p>The child process is identified by the process.name field.</p>
+<h3 id="3-constructing-the-rule"><strong>3. Constructing the Rule</strong>:</h3>
+<p>The query was built to find this specific, high-fidelity malicious pattern. We created a list of common Office parent processes and a list of powerful script interpreters that are frequently abused by attackers. The rule then triggers an alert only when a process from the first list spawns a process from the second list. This specific parent-child combination is a very strong indicator of compromise.</p>
+<h2 id="detection-logic">Detection Logic</h2>
+<p>This is a query-based rule that triggers on a single event matching the specified process creation pattern.</p>
+<h3 id="query">Query:</h3>
+<p><code>process.parent.name:("winword.exe" or "excel.exe" or "powerpnt.exe" or "outlook.exe") and process.name:("powershell.exe" or "cmd.exe" or "wscript.exe" or "mshta.exe")</code></p>
+<h3 id="breakdown">Breakdown:</h3>
+<ul>
+<li>
+<p>process.parent.name:(...): This part of the query looks for an event where the parent (creating) process is a Microsoft Office application like Word, Excel, PowerPoint, or Outlook.</p>
+</li>
+<li>
+<p>and: This logical operator requires both conditions to be true.</p>
+</li>
+<li>
+<p>process.name:(...): This part looks for the child (created) process being a common script interpreter such as PowerShell, Command Prompt, Windows Script Host, or MSHTA (which executes HTML application files).</p>
+</li>
+</ul>
+<p>In short, the rule alerts when an Office application is used to launch a command shell or script engine.</p>
+<h2 id="simulation-and-validation">Simulation and Validation</h2>
+<p>This rule can be validated by creating a macro-enabled Microsoft Word document that executes a simple command.</p>
+<h3 id="atomic-red-team-test-procedure">Atomic Red Team Test Procedure:</h3>
+<ul>
+<li>
+<p>Open Microsoft Word and create a new blank document.</p>
+</li>
+<li>
+<p>Press ALT + F11 to open the Visual Basic for Applications (VBA) editor.</p>
+</li>
+<li>
+<p>In the project window, double-click ThisDocument and paste the following code:
+VBA</p>
+</li>
+</ul>
+<pre><code>    Sub AutoOpen() 
+    ` This macro will run automatically when the document is opened and macros are enabled.
+    ` It launches PowerShell to execute the 'whoami command.
+    CreateObject(&quot;WScript.Shell&quot;).Run powershell.exe -c whoami, 0, True
+End Sub
+</code></pre>
+<ul>
+<li>
+<p>Save the document as a "Word Macro-Enabled Document" (.docm).</p>
+</li>
+<li>
+<p>Close and reopen the document on a monitored endpoint. When prompted, click "Enable Content".</p>
+</li>
+</ul>
+<p>This action will cause winword.exe to spawn powershell.exe, which precisely matches the rule's logic and should trigger an alert.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../active_scanning/" class="btn btn-neutral float-left" title="Active Scanning"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../command_and_scripting_interpreter/" class="btn btn-neutral float-right" title="Command and Scripting Interpreter">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../active_scanning/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../command_and_scripting_interpreter/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Virtual Machine - APT Detection using ELK Stack</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Virtual Machine";
+        var mkdocs_page_input_path = "setup/vm_setup.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> APT Detection using ELK Stack
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Introduction</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../overall_workflow/">Overall Workflow</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../apt_lifecycle/">APT lifecycle</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Setup</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../elk_setup/">ELK</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Virtual Machine</a>
+    <ul class="current">
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../art_setup/">Atomic Red Team</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Rules created</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../rules_created/active_scanning/">Active Scanning</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../rules_created/phishing/">Phishing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../rules_created/command_and_scripting_interpreter/">Command and Scripting Interpreter</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../rules_created/boot_or_logon_autostart_execution/">Boot or Logon Autostart Execution</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../rules_created/abuse_elevation_control_mechanism/">Abuse Elevation Control Mechanism</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../rules_created/obfuscated_files_or_information/">Obfuscated Files or Information</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../rules_created/os_credential_dumping/">OS Credential Dumping</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../rules_created/system_information_discovery/">System Information Discovery</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../rules_created/remote_services/">Remote Services</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../rules_created/automated_collection/">Automated Collection</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../rules_created/application_layer_protocol/">Application Layer Protocol</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../rules_created/exfiltration_over_alternative_protocol/">Exfiltration Over Alternative Protocol</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">APT Detection using ELK Stack</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Setup</li>
+      <li class="breadcrumb-item active">Virtual Machine</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="environment-setup-guide">Environment Setup Guide</h1>
+<p>This guide provides step-by-step instructions to configure the complete lab environment required for this project. Following these steps ensures that you have a functional ELK Stack ready to receive and analyze logs for threat detection.</p>
+<h1 id="pre-installation">Pre-installation</h1>
+<p>This phase involves gathering all the necessary software before starting the installation process.</p>
+<h2 id="windows-11-disk-image-iso">Windows 11 Disk Image (ISO)</h2>
+<p>This is the operating system that will serve as our target endpoint.</p>
+<ul>
+<li>
+<h3 id="description">Description:</h3>
+<p>A Windows 11 ISO file is a complete copy of the Windows 11 installation media, required by the virtual machine manager to install the OS.</p>
+</li>
+<li>
+<h3 id="instructions">Instructions:</h3>
+<ul>
+<li>Navigate to the official <a href="https://www.microsoft.com/software-download/windows11">Microsoft Windows 11 Download page</a>.</li>
+<li>
+<p>Under the "Download Windows 11 Disk Image (ISO)" section, select "Windows 11 (multi-edition ISO)".</p>
+</li>
+<li>
+<p>Click "Download", choose your product language, and click "Confirm".</p>
+</li>
+<li>Click the "64-bit Download" button to save the ISO file to your computer.</li>
+</ul>
+</li>
+</ul>
+<h2 id="virtio-drivers">VirtIO Drivers</h2>
+<p>These are specialized drivers that boost the performance of your virtual machine.</p>
+<ul>
+<li>
+<h3 id="description_1">Description:</h3>
+<p>VirtIO provides a set of high-performance drivers for virtualized hardware, such as network cards and disk controllers. Using them allows the guest OS (Windows) to communicate more efficiently with the host hypervisor (QEMU/KVM), resulting in significantly better I/O performance.</p>
+</li>
+<li>
+<h3 id="instructions_1">Instructions:</h3>
+<ul>
+<li>
+<p>Go to the <a href="https://pve.proxmox.com/wiki/Windows_VirtIO_Drivers">Proxmox VE Wiki for Windows VirtIO Drivers</a>.</p>
+</li>
+<li>
+<p>Download the latest stable VirtIO driver ISO file. The direct link is typically named virtio-win-x.x.xxx.iso.</p>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="installation">Installation</h1>
+<p>This phase covers the setup of the virtualization platform and the installation of the Windows 11 guest OS.</p>
+<h2 id="qemukvm-virtual-machine-manager">QEMU/KVM &amp; Virtual Machine Manager</h2>
+<p>This is the software that will create and run your virtual machine.</p>
+<ul>
+<li>
+<h3 id="description_2">Description:</h3>
+<p><strong>QEMU</strong> is an emulator, and <strong>KVM</strong> (Kernel-based Virtual Machine) is a Linux kernel module that allows the kernel to act as a hypervisor. Together, they provide an efficient, hardware-accelerated virtualization solution. virt-manager provides a user-friendly graphical interface to manage them.</p>
+</li>
+<li>
+<h3 id="instructions_2">Instructions:</h3>
+<ul>
+<li>
+<p><strong>Check for Virtualization Support</strong>: </p>
+<p>Open a terminal on your Linux host and run egrep -c <code>'(vmx|svm)' /proc/cpuinfo</code>. A result greater than 0 means your CPU supports virtualization. Ensure it is enabled in your BIOS/UEFI.</p>
+</li>
+<li>
+<p><strong>Install Packages</strong> (for Debian/Ubuntu-based systems):</p>
+<p><code>sudo apt update
+sudo apt install qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virt-manager</code></p>
+</li>
+<li>
+<p><strong>Restart and Enable Services</strong>: After installation, restart, enable, and start the virtualization service.</p>
+<p><code>sudo systemctl restart libvirt.service
+sudo systemctl enable libvirt.service</code></p>
+</li>
+<li>
+<p>It is also a good practice to log out and log back in, or reboot your machine, to ensure all changes are applied.</p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="windows-11-vm-creation-and-driver-setup">Windows 11 VM Creation and Driver Setup</h2>
+<p>Now you'll create the VM and install Windows along with the performance drivers.</p>
+<ul>
+<li>
+<h3 id="instructions_3">Instructions:</h3>
+<ol>
+<li>
+<p>Launch <strong>Virtual Machine Manager</strong> (<code>virt-manager</code>) from your applications menu or terminal.</p>
+</li>
+<li>
+<p>Click the "Create a new virtual machine" icon.</p>
+</li>
+<li>
+<p>Select "Local install media (ISO image or CDROM)" and click "Forward".</p>
+</li>
+<li>
+<p>Click "Browse Local" and select the Windows 11 ISO you downloaded. Click "Forward".</p>
+</li>
+<li>
+<p>Allocate at least 4 GB (4096 MB) of RAM and 2 CPU cores. Click "Forward".</p>
+</li>
+<li>
+<p>Create a virtual disk of at least 64 GB. Click "Forward".</p>
+</li>
+<li>
+<p>On the final screen, check the box for "Customize configuration before install" and click "Finish".</p>
+</li>
+<li>
+<p>In the customization window, click "Add Hardware".</p>
+</li>
+<li>
+<p>Select "Storage", choose "CDROM device", and click "Manage".</p>
+</li>
+<li>
+<p>Click "Browse Local" and select the VirtIO driver ISO you downloaded. Click "Finish".</p>
+</li>
+<li>
+<p>Click <strong>"Begin Installation"</strong>. During the Windows setup, when you reach the "Where do you want to install Windows?" screen, your disk will likely not be visible.</p>
+</li>
+<li>
+<p>Click <strong>"Load driver"</strong>, then "Browse". Navigate to the VirtIO CD drive, find the amd64\w11 folder inside the viostor directory, and select it. Click "OK".</p>
+</li>
+<li>
+<p>The storage driver will load, and your virtual disk will appear. You can now proceed with the Windows installation as usual.</p>
+</li>
+<li>
+<p>After Windows is installed and running, open File Explorer, go to the VirtIO CD drive, and run the virtio-win-guest-tools installer to install all remaining drivers automatically.</p>
+</li>
+</ol>
+</li>
+</ul>
+<h1 id="post-installation">Post-installation</h1>
+<p>After the Windows VM is running, you will deploy and configure the security agents needed for log collection.</p>
+<h2 id="1-enable-group-policy-editor-gpeditmsc-and-advanced-logging"><strong>1. Enable Group Policy Editor (<code>gpedit.msc</code>) and Advanced Logging</strong></h2>
+<p>This tool allows you to enable detailed system auditing that isn't on by default.</p>
+<ul>
+<li>
+<p><strong>Description</strong>:</p>
+<p>The Group Policy Editor (gpedit.msc) is a Windows administration tool used to configure system and user settings. We will use it to enable Advanced Audit Policies that generate high-value security events, such as detailed process creation logs with command-line arguments. Note: gpedit.msc is not available on Windows Home editions, but can be enabled with a script.</p>
+</li>
+<li>
+<p><strong>Instructions</strong>:</p>
+<p><strong>1. Enable gpedit.msc (if using Windows Home)</strong>:
+- Open Notepad and paste the following code:</p>
+<pre><code>    @echo off
+    echo Checking for permissions...
+    net session &gt;nul 2&gt;&amp;1
+    if %errorlevel% neq 0 (
+        echo Administrator permissions required.
+        echo Please run this script as an administrator.
+        pause
+        exit
+    )
+
+    echo Enabling Group Policy Editor...
+    pushd "%~dp0"
+
+    set "package_path=%SystemRoot%\servicing\Packages"
+    set "search_pattern1=Microsoft-Windows-GroupPolicy-ClientTools-Package~*.mum"
+    set "search_pattern2=Microsoft-Windows-GroupPolicy-ClientExtensions-Package~*.mum"
+
+    echo Searching for packages...
+    dir /b "%package_path%\%search_pattern1%" &gt; gpedit_list.txt
+    dir /b "%package_path%\%search_pattern2%" &gt;&gt; gpedit_list.txt
+
+    echo Installing packages...
+    for /f %%i in ('findstr /i . gpedit_list.txt 2^&gt;nul') do (
+        echo Installing %%i
+        dism /online /norestart /add-package:"%package_path%\%%i"
+    )
+
+    echo Cleaning up...
+    del gpedit_list.txt
+
+    echo Process completed. You can now try running gpedit.msc.
+    pause
+</code></pre>
+<ul>
+<li>Save the file as gpedit-enabler.bat and run it as an Administrator.</li>
+</ul>
+<p><strong>2. Enable Advanced Audit Policies</strong>:</p>
+<ul>
+<li>
+<p>Press Win + R, type gpedit.msc, and press Enter.</p>
+</li>
+<li>
+<p>Navigate to Computer Configuration -&gt; Windows Settings -&gt; Security Settings 
+-&gt; Advanced Audit Policy Configuration -&gt; System Audit Policies.</p>
+</li>
+<li>
+<p>Go to Detailed Tracking and double-click "Audit Process Creation".</p>
+</li>
+<li>
+<p>Check the boxes for both "Success" and "Failure" and click "OK". This will enable logging for Event ID 4688, which includes command-line details.</p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="2-sysmon-system-monitor-setup"><strong>2. Sysmon (System Monitor) Setup</strong></h2>
+<p>Sysmon is a powerful tool that provides deep visibility into system activity.</p>
+<ul>
+<li>
+<p><strong>Description</strong>: </p>
+<p><strong>Sysmon</strong> is a free tool from Microsoft Sysinternals that monitors and logs system activity to the Windows Event Log. It provides highly detailed information about process creation, network connections, file changes, and more, which are invaluable for threat detection.</p>
+</li>
+<li>
+<p><strong>Instructions</strong>:</p>
+<ol>
+<li>
+<p>Download Sysmon from the <a href="https://docs.microsoft.com/en-us/sysinternals/downloads/sysmon">Microsoft Sysinternals page</a>.</p>
+</li>
+<li>
+<p>Download a trusted, community-vetted configuration file. The <a href="https://github.com/SwiftOnSecurity/sysmon-config">SwiftOnSecurity configuration</a> is an excellent starting point. Download the sysmonconfig-export.xml file.</p>
+</li>
+<li>
+<p>Place both the <code>Sysmon64.exe</code> executable and the configuration file (<code>sysmonconfig-export.xml</code>) in the same directory (e.g., <code>C:\Sysmon</code>).</p>
+</li>
+<li>
+<p>Open PowerShell as an Administrator, navigate to the directory, and run the installation command:</p>
+<p><code>.\Sysmon64.exe -accepteula -i sysmonconfig-export.xml</code></p>
+</li>
+<li>
+<p>Sysmon is now installed and actively logging events to <code>Applications and Services Logs/Microsoft/Windows/Sysmon/Operational</code>.</p>
+</li>
+</ol>
+</li>
+</ul>
+<h2 id="3-winlogbeat-setup"><strong>3. Winlogbeat Setup</strong></h2>
+<p>This agent will collect all your logs and send them to your analysis server.</p>
+<ul>
+<li>
+<p><strong>Description</strong>: </p>
+<p>Winlogbeat is a lightweight data shipper from Elastic that is installed on your Windows VM. It tails Windows event logs (including the ones generated by Sysmon), and forwards them to a central Logstash or Elasticsearch server for analysis and visualization.</p>
+</li>
+<li>
+<p><strong>Instructions</strong>:</p>
+<ol>
+<li>
+<p>Download Winlogbeat from the <a href="https://www.elastic.co/downloads/beats/winlogbeat">Elastic downloads page</a>. Unzip the file to a location like <code>C:\Program Files\Winlogbeat</code>.</p>
+</li>
+<li>
+<p>Navigate to the Winlogbeat directory and open the winlogbeat.yml configuration file in a text editor like Notepad++.</p>
+</li>
+<li>
+<p>Configure the input: Ensure Winlogbeat collects the Sysmon logs.</p>
+<p>winlogbeat.event_logs:
+- name: Application
+- name: Security
+- name: System
+- name: Microsoft-Windows-Sysmon/Operational
+ignore_older: 72h</p>
+</li>
+<li>
+<p>Configure the output: Point it to your Logstash or Elasticsearch instance. Replace the IP address accordingly.</p>
+<p><code>output.logstash:
+    hosts: ["192.168.1.100:5044"]</code></p>
+<p>Example for Elasticsearch (comment out the Logstash section if using this)</p>
+<p><code>output.elasticsearch:
+hosts: ["192.168.1.100:9200"]</code></p>
+</li>
+<li>
+<p>Save the winlogbeat.yml file.</p>
+</li>
+<li>
+<p>Open PowerShell as an Administrator, navigate to the Winlogbeat directory, and run the following scripts to install and start the service:</p>
+<p><code>.\install-service-winlogbeat.ps1
+Start-Service winlogbeat</code></p>
+</li>
+<li>
+<p>Winlogbeat is now running as a service and forwarding logs from your Windows 11 VM.</p>
+</li>
+</ol>
+</li>
+</ul>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../elk_setup/" class="btn btn-neutral float-left" title="ELK"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../art_setup/" class="btn btn-neutral float-right" title="Atomic Red Team">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../elk_setup/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../art_setup/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

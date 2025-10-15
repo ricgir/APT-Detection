@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Rules - APT Detection using ELK Stack</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Rules";
+        var mkdocs_page_input_path = "rules.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> APT Detection using ELK Stack
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Introduction</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../overall_workflow/">Overall Workflow</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../apt_lifecycle/">APT lifecycle</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Setup</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../setup/elk_setup/">ELK</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../setup/vm_setup/">Virtual Machine</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../setup/art_setup/">Atomic Red Team</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Rules created</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../rules_created/active_scanning/">Active Scanning</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../rules_created/phishing/">Phishing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../rules_created/command_and_scripting_interpreter/">Command and Scripting Interpreter</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../rules_created/boot_or_logon_autostart_execution/">Boot or Logon Autostart Execution</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../rules_created/abuse_elevation_control_mechanism/">Abuse Elevation Control Mechanism</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../rules_created/obfuscated_files_or_information/">Obfuscated Files or Information</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../rules_created/os_credential_dumping/">OS Credential Dumping</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../rules_created/system_information_discovery/">System Information Discovery</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../rules_created/remote_services/">Remote Services</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../rules_created/automated_collection/">Automated Collection</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../rules_created/application_layer_protocol/">Application Layer Protocol</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../rules_created/exfiltration_over_alternative_protocol/">Exfiltration Over Alternative Protocol</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">APT Detection using ELK Stack</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Rules</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <!-- [Active Scanning](rules_created/active_scanning.md)
+
+[Phishing](rules_created/phishing.md)
+
+[Command and Scripting Interpreter](rules_created/command_and_scripting_interpreter.md)
+
+[Boot or Logon Autostart Execution](rules_created/boot_or_logon_autostart_execution.md)
+
+[Abuse Elevation Control Mechanism](rules_created/abuse_elevation_control_mechanism.md)
+
+[Obfuscated Files or Information](rules_created/obfuscated_files_or_information.md)
+
+[OS Credential Dumping](rules_created/os_credential_dumping.md)
+
+[System Information Discovery](rules_created/system_information_discovery.md)
+
+[Remote Services](rules_created/remote_services.md)
+
+[Automated Collection](rules_created/automated_collection.md)
+
+[Application Layer Protocol](rules_created/application_layer_protocol.md)
+
+[Exfiltration Over Alternative Protocol](rules_created/exfiltration_over_alternative_protocol.md) -->
+
+<h1 id="detection-rule-repository">Detection Rule Repository</h1>
+<p>This page serves as the central repository for all detection rules developed for this project. Each rule is mapped to a specific <strong>MITRE ATT&amp;CK®</strong> tactic and technique, and the link will take you to a detailed page with the KQL query and implementation notes.</p>
+<hr />
+<h2 id="all-rules">All Rules</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Rule Name</th>
+<th style="text-align: left;">MITRE ATT&amp;CK Tactic</th>
+<th style="text-align: left;">Technique ID</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><a href="../rules_created/active_scanning/">Active Scanning</a></td>
+<td style="text-align: left;">Reconnaissance</td>
+<td style="text-align: left;"><a href="https://attack.mitre.org/techniques/T1595/">T1595</a></td>
+<td style="text-align: left;">Detects brute-force patterns indicative of network scanning.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="../rules_created/phishing/">Phishing</a></td>
+<td style="text-align: left;">Initial Access</td>
+<td style="text-align: left;"><a href="https://attack.mitre.org/techniques/T1566/">T1566</a></td>
+<td style="text-align: left;">Identifies email clients spawning suspicious child processes.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="../rules_created/command_and_scripting_interpreter/">Command and Scripting Interpreter</a></td>
+<td style="text-align: left;">Execution</td>
+<td style="text-align: left;"><a href="https://attack.mitre.org/techniques/T1059/">T1059</a></td>
+<td style="text-align: left;">Flags PowerShell execution with encoded command flags.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="../rules_created/boot_or_logon_autostart_execution/">Boot or Logon Autostart Execution</a></td>
+<td style="text-align: left;">Persistence</td>
+<td style="text-align: left;"><a href="https://attack.mitre.org/techniques/T1547/">T1547</a></td>
+<td style="text-align: left;">Monitors for modifications to common registry "Run" keys.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="../rules_created/abuse_elevation_control_mechanism/">Abuse Elevation Control Mechanism</a></td>
+<td style="text-align: left;">Privilege Escalation</td>
+<td style="text-align: left;"><a href="https://attack.mitre.org/techniques/T1548/">T1548</a></td>
+<td style="text-align: left;">Detects a known UAC bypass using <code>fodhelper.exe</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="../rules_created/obfuscated_files_or_information/">Obfuscated Files or Information</a></td>
+<td style="text-align: left;">Defense Evasion</td>
+<td style="text-align: left;"><a href="https://attack.mitre.org/techniques/T1027/">T1027</a></td>
+<td style="text-align: left;">Alerts on the use of <code>certutil.exe</code> to decode files.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="../rules_created/os_credential_dumping/">OS Credential Dumping</a></td>
+<td style="text-align: left;">Credential Access</td>
+<td style="text-align: left;"><a href="https://attack.mitre.org/techniques/T1003/">T1003</a></td>
+<td style="text-align: left;">Identifies unauthorized processes accessing <code>lsass.exe</code> memory.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="../rules_created/system_information_discovery/">System Information Discovery</a></td>
+<td style="text-align: left;">Discovery</td>
+<td style="text-align: left;"><a href="https://attack.mitre.org/techniques/T1082/">T1082</a></td>
+<td style="text-align: left;">Looks for a rapid burst of system discovery commands.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="../rules_created/remote_services/">Remote Services</a></td>
+<td style="text-align: left;">Lateral Movement</td>
+<td style="text-align: left;"><a href="https://attack.mitre.org/techniques/T1021/">T1021</a></td>
+<td style="text-align: left;">Flags non-standard RDP connections.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="../rules_created/automated_collection/">Automated Collection</a></td>
+<td style="text-align: left;">Collection</td>
+<td style="text-align: left;"><a href="https://attack.mitre.org/techniques/T1119/">T1119</a></td>
+<td style="text-align: left;">Detects rapid creation of sensitive file types by a shell.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="../rules_created/application_layer_protocol/">Application Layer Protocol</a></td>
+<td style="text-align: left;">Command and Control</td>
+<td style="text-align: left;"><a href="https://attack.mitre.org/techniques/T1071/">T1071</a></td>
+<td style="text-align: left;">Flags non-browser processes connecting to code-hosting sites.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="../rules_created/exfiltration_over_alternative_protocol/">Exfiltration Over Alternative Protocol</a></td>
+<td style="text-align: left;">Exfiltration</td>
+<td style="text-align: left;"><a href="https://attack.mitre.org/techniques/T1048/">T1048</a></td>
+<td style="text-align: left;">Detects abnormally long DNS queries indicative of tunneling.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<blockquote>
+<p><strong>Note</strong>: Click on any rule name to view its detailed documentation, including the full KQL query, data source requirements, and validation steps.</p>
+</blockquote>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

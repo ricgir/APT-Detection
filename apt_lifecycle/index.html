@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>APT lifecycle - APT Detection using ELK Stack</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "APT lifecycle";
+        var mkdocs_page_input_path = "apt_lifecycle.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> APT Detection using ELK Stack
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Introduction</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../overall_workflow/">Overall Workflow</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="./">APT lifecycle</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#1-reconnaissance-t1595-active-scanning">1. Reconnaissance (T1595: Active Scanning)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#2-initial-access-t1566-phishing">2. Initial Access (T1566: Phishing)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#3-execution-t1059-command-and-scripting-interpreter">3. Execution (T1059: Command and Scripting Interpreter)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#4-persistence-t1547-boot-or-logon-autostart-execution">4. Persistence (T1547: Boot or Logon Autostart Execution)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#5-privilege-escalation-t1548-abuse-elevation-control-mechanism">5. Privilege Escalation (T1548: Abuse Elevation Control Mechanism)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#6-defense-evasion-t1027-obfuscated-files-or-information">6. Defense Evasion (T1027: Obfuscated Files or Information)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#7-credential-access-t1003-os-credential-dumping">7. Credential Access (T1003: OS Credential Dumping)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#8-discovery-t1082-system-information-discovery">8. Discovery (T1082: System Information Discovery)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#9-lateral-movement-t1021-remote-services">9. Lateral Movement (T1021: Remote Services)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#10-collection-t1119-automated-collection">10. Collection (T1119: Automated Collection)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#11-command-and-control-c2-t1071-application-layer-protocol">11. Command and Control (C2) (T1071: Application Layer Protocol)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#12-exfiltration-t1048-exfiltration-over-alternative-protocol">12. Exfiltration (T1048: Exfiltration Over Alternative Protocol)</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Setup</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../setup/elk_setup/">ELK</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../setup/vm_setup/">Virtual Machine</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../setup/art_setup/">Atomic Red Team</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Rules created</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../rules_created/active_scanning/">Active Scanning</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../rules_created/phishing/">Phishing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../rules_created/command_and_scripting_interpreter/">Command and Scripting Interpreter</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../rules_created/boot_or_logon_autostart_execution/">Boot or Logon Autostart Execution</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../rules_created/abuse_elevation_control_mechanism/">Abuse Elevation Control Mechanism</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../rules_created/obfuscated_files_or_information/">Obfuscated Files or Information</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../rules_created/os_credential_dumping/">OS Credential Dumping</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../rules_created/system_information_discovery/">System Information Discovery</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../rules_created/remote_services/">Remote Services</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../rules_created/automated_collection/">Automated Collection</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../rules_created/application_layer_protocol/">Application Layer Protocol</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../rules_created/exfiltration_over_alternative_protocol/">Exfiltration Over Alternative Protocol</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">APT Detection using ELK Stack</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">APT lifecycle</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="apt-threat-lifecycle-detection-coverage">APT Threat Lifecycle &amp; Detection Coverage</h1>
+<p>This document outlines the stages of an Advanced Persistent Threat (APT) lifecycle, mapped to the MITRE ATT&amp;CK framework. Each stage includes a description of the adversary's objective, a concise detection strategy, a placeholder for your rule, and a link to the relevant Atomic Red Team test.</p>
+<h2 id="1-reconnaissance-t1595-active-scanning">1. Reconnaissance (T1595: Active Scanning)</h2>
+<p><strong>Description:</strong><br />
+Adversaries probe victim networks and systems to identify potential vulnerabilities, open ports, and running services. This helps them map the target's external footprint before launching an attack.</p>
+<p><strong>Detection Strategy:</strong><br />
+Identifies brute-force patterns by detecting a high volume of failed logins from a single IP, a common byproduct of active scanning.</p>
+<p><a href="../rules_created/active_scanning/">Detection Rule</a></p>
+<p><strong>Atomic Red Team Reference:</strong><br />
+<a href="https://www.atomicredteam.io/atomic-red-team/atomics/T1595.003">T1595.003 - Scanning IP Blocks</a></p>
+<hr />
+<h2 id="2-initial-access-t1566-phishing">2. Initial Access (T1566: Phishing)</h2>
+<p><strong>Description:</strong><br />
+Attackers send fraudulent emails containing malicious attachments or links to gain a foothold in the network.</p>
+<p><strong>Detection Strategy:</strong><br />
+Detects anomalous parent-child process relationships, such as an email client spawning a script or executable.</p>
+<p><a href="../rules_created/phishing/">Detection Rule</a></p>
+<p><strong>Atomic Red Team Reference:</strong><br />
+<a href="https://www.atomicredteam.io/atomic-red-team/atomics/T1566.001">T1566.001 - Spearphishing Attachment</a></p>
+<hr />
+<h2 id="3-execution-t1059-command-and-scripting-interpreter">3. Execution (T1059: Command and Scripting Interpreter)</h2>
+<p><strong>Description:</strong><br />
+Adversaries use command-line interfaces (like PowerShell) to execute malicious commands and scripts.</p>
+<p><strong>Detection Strategy:</strong><br />
+Alerts on PowerShell execution using command-line flags (<code>-enc</code>, <code>-encodedcommand</code>) designed to run obfuscated or encoded commands.</p>
+<p><a href="../rules_created/command_and_scripting_interpreter/">Detection Rule</a></p>
+<p><strong>Atomic Red Team Reference:</strong><br />
+<a href="https://www.atomicredteam.io/atomic-red-team/atomics/T1059">T1059 - Command and Scripting Interpreter</a></p>
+<hr />
+<h2 id="4-persistence-t1547-boot-or-logon-autostart-execution">4. Persistence (T1547: Boot or Logon Autostart Execution)</h2>
+<p><strong>Description:</strong><br />
+Attackers configure malware to run automatically by modifying registry keys, startup folders, or logon scripts.</p>
+<p><strong>Detection Strategy:</strong><br />
+Monitors for modifications to common registry "Run" keys.</p>
+<p><a href="../rules_created/boot_or_logon_autostart_execution/">Detection Rule</a></p>
+<p><strong>Atomic Red Team Reference:</strong><br />
+<a href="https://www.atomicredteam.io/atomic-red-team/atomics/T1547">T1547 - Boot or Logon Autostart Execution</a></p>
+<hr />
+<h2 id="5-privilege-escalation-t1548-abuse-elevation-control-mechanism">5. Privilege Escalation (T1548: Abuse Elevation Control Mechanism)</h2>
+<p><strong>Description:</strong><br />
+Adversaries exploit system mechanisms that manage user permissions, such as UAC on Windows, to gain higher-level privileges.</p>
+<p><strong>Detection Strategy:</strong><br />
+Detects a known UAC bypass by identifying when <code>fodhelper.exe</code> anomalously spawns a command shell.</p>
+<p><a href="../rules_created/abuse_elevation_control_mechanism/">Detection Rule</a></p>
+<p><strong>Atomic Red Team Reference:</strong><br />
+<a href="https://www.atomicredteam.io/atomic-red-team/atomics/T1548.001">T1548.001 - Setuid and Setgid</a></p>
+<hr />
+<h2 id="6-defense-evasion-t1027-obfuscated-files-or-information">6. Defense Evasion (T1027: Obfuscated Files or Information)</h2>
+<p><strong>Description:</strong><br />
+Attackers conceal their malicious code to avoid detection, often using encryption, encoding, or packing.</p>
+<p><strong>Detection Strategy:</strong><br />
+Flags the use of <code>certutil.exe</code> with the <code>-decode</code> flag.</p>
+<p><a href="../rules_created/obfuscated_files_or_information/">Detection Rule</a></p>
+<p><strong>Atomic Red Team Reference:</strong><br />
+<a href="https://www.atomicredteam.io/atomic-red-team/atomics/T1027">T1027 - Obfuscated Files or Information</a></p>
+<hr />
+<h2 id="7-credential-access-t1003-os-credential-dumping">7. Credential Access (T1003: OS Credential Dumping)</h2>
+<p><strong>Description:</strong><br />
+Extracting account login material from the OS, often by dumping memory from the LSASS process.</p>
+<p><strong>Detection Strategy:</strong><br />
+Detects unauthorized processes attempting to access the memory of <code>lsass.exe</code>.</p>
+<p><a href="../rules_created/os_credential_dumping/">Detection Rule</a></p>
+<p><strong>Atomic Red Team Reference:</strong><br />
+<a href="https://www.atomicredteam.io/atomic-red-team/atomics/T1003">T1003 - OS Credential Dumping</a></p>
+<hr />
+<h2 id="8-discovery-t1082-system-information-discovery">8. Discovery (T1082: System Information Discovery)</h2>
+<p><strong>Description:</strong><br />
+Attackers collect detailed information about the compromised system.</p>
+<p><strong>Detection Strategy:</strong><br />
+Looks for a rapid burst of system discovery commands from a single process.</p>
+<p><a href="../rules_created/system_information_discovery/">Detection Rule</a></p>
+<p><strong>Atomic Red Team Reference:</strong><br />
+<a href="https://www.atomicredteam.io/atomic-red-team/atomics/T1082">T1082 - System Information Discovery</a></p>
+<hr />
+<h2 id="9-lateral-movement-t1021-remote-services">9. Lateral Movement (T1021: Remote Services)</h2>
+<p><strong>Description:</strong><br />
+Adversaries use legitimate remote access tools like RDP to move between systems.</p>
+<p><strong>Detection Strategy:</strong><br />
+Identifies non-standard RDP connections by flagging sessions not initiated by <code>svchost.exe</code>.</p>
+<p><a href="../rules_created/remote_services/">Detection Rule</a></p>
+<p><strong>Atomic Red Team Reference:</strong><br />
+<a href="https://www.atomicredteam.io/atomic-red-team/atomics/T1021.001">T1021.001 - Remote Desktop Protocol</a></p>
+<hr />
+<h2 id="10-collection-t1119-automated-collection">10. Collection (T1119: Automated Collection)</h2>
+<p><strong>Description:</strong><br />
+Attackers use scripts to automatically search for and gather files containing sensitive data.</p>
+<p><strong>Detection Strategy:</strong><br />
+Alerts on the rapid creation of numerous sensitive file types by a shell process.</p>
+<p><a href="../rules_created/automated_collection/">Detection Rule</a></p>
+<p><strong>Atomic Red Team Reference:</strong><br />
+<a href="https://www.atomicredteam.io/atomic-red-team/atomics/T1119">T1119 - Automated Collection</a></p>
+<hr />
+<h2 id="11-command-and-control-c2-t1071-application-layer-protocol">11. Command and Control (C2) (T1071: Application Layer Protocol)</h2>
+<p><strong>Description:</strong><br />
+Adversaries use common protocols like HTTP to blend C2 traffic with legitimate activity.</p>
+<p><strong>Detection Strategy:</strong><br />
+Flags network connections from non-browser processes to common code-hosting sites.</p>
+<p><a href="../rules_created/application_layer_protocol/">Detection Rule</a></p>
+<p><strong>Atomic Red Team Reference:</strong><br />
+<a href="https://www.atomicredteam.io/atomic-red-team/atomics/T1071">T1071 - Application Layer Protocol</a></p>
+<hr />
+<h2 id="12-exfiltration-t1048-exfiltration-over-alternative-protocol">12. Exfiltration (T1048: Exfiltration Over Alternative Protocol)</h2>
+<p><strong>Description:</strong><br />
+Data is stolen by transmitting it over an alternative protocol, such as DNS.</p>
+<p><strong>Detection Strategy:</strong><br />
+Detects potential DNS tunneling by identifying abnormally long DNS queries.</p>
+<p><a href="../rules_created/exfiltration_over_alternative_protocol/">Detection Rule</a></p>
+<p><strong>Atomic Red Team Reference:</strong><br />
+<a href="https://www.atomicredteam.io/atomic-red-team/atomics/T1048">T1048 - Exfiltration Over Alternative Protocol</a></p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../overall_workflow/" class="btn btn-neutral float-left" title="Overall Workflow"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../setup/elk_setup/" class="btn btn-neutral float-right" title="ELK">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../overall_workflow/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../setup/elk_setup/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

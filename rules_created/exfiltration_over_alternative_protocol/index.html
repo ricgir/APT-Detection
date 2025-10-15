@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Exfiltration Over Alternative Protocol - APT Detection using ELK Stack</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Exfiltration Over Alternative Protocol";
+        var mkdocs_page_input_path = "rules_created/exfiltration_over_alternative_protocol.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> APT Detection using ELK Stack
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Introduction</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../overall_workflow/">Overall Workflow</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../apt_lifecycle/">APT lifecycle</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Setup</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../setup/elk_setup/">ELK</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../setup/vm_setup/">Virtual Machine</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../setup/art_setup/">Atomic Red Team</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Rules created</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../active_scanning/">Active Scanning</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../phishing/">Phishing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../command_and_scripting_interpreter/">Command and Scripting Interpreter</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../boot_or_logon_autostart_execution/">Boot or Logon Autostart Execution</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../abuse_elevation_control_mechanism/">Abuse Elevation Control Mechanism</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../obfuscated_files_or_information/">Obfuscated Files or Information</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../os_credential_dumping/">OS Credential Dumping</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../system_information_discovery/">System Information Discovery</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../remote_services/">Remote Services</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../automated_collection/">Automated Collection</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../application_layer_protocol/">Application Layer Protocol</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Exfiltration Over Alternative Protocol</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#description">Description</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#rule-derivation-from-log-analysis">Rule Derivation from Log Analysis</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#1-defining-the-behavior">1. Defining the Behavior:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#2-translating-behavior-to-log-fields">2. Translating Behavior to Log Fields:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#3-constructing-the-rule">3. Constructing the Rule:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#detection-logic">Detection Logic</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#query">Query:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#threshold">Threshold:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#query-explanation">Query Explanation:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#simulation-and-validation">Simulation and Validation</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#atomic-red-team-test-command">Atomic Red Team Test Command:</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">APT Detection using ELK Stack</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Rules created</li>
+      <li class="breadcrumb-item active">Exfiltration Over Alternative Protocol</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="detection-rule-exfiltration-over-dns-tunneling">Detection Rule: Exfiltration Over DNS Tunneling</h1>
+<p>Rule ID: <strong>21890b79-0173-4afc-a46e-338635db2a75</strong></p>
+<p>Rule Name: Exfiltration (T1048: Exfiltration Over Alternative Protocol)</p>
+<p>MITRE ATT&amp;CK Tactic: <a href="https://attack.mitre.org/tactics/TA0010/">Exfiltration</a></p>
+<p>MITRE ATT&amp;CK Technique: <a href="https://attack.mitre.org/techniques/T1048/003/">T1048.003, Exfiltration Over Alternative Protocol: DNS</a></p>
+<h2 id="description">Description</h2>
+<p>Data is often stolen by transmitting it over a protocol that differs from the primary C2 channel. This rule detects <strong>DNS tunneling</strong>, a technique where an attacker encodes stolen data into a series of DNS queries.</p>
+<p>Because DNS is a fundamental network protocol and is almost always allowed through firewalls, it provides a covert channel for exfiltration. A compromised host will make an abnormally high number of DNS requests to many unique, malicious subdomains. Each query's subdomain contains a small chunk of the stolen data. This rule identifies this <strong>"DNS storm"</strong> behavior.</p>
+<h2 id="rule-derivation-from-log-analysis">Rule Derivation from Log Analysis</h2>
+<p>The logic for this rule was developed by establishing a baseline for normal DNS activity and identifying the statistical anomalies created by DNS tunneling.</p>
+<h3 id="1-defining-the-behavior"><strong>1. Defining the Behavior</strong>:</h3>
+<p>DNS tunneling is characterized by two main factors from a single host: a very high volume of total DNS queries and a high cardinality (uniqueness) of the domains being queried. Legitimate activity may be high volume (e.g., loading a website), but the number of unique domains is typically limited. Tunneling creates hundreds of unique subdomains.</p>
+<h3 id="2-translating-behavior-to-log-fields"><strong>2. Translating Behavior to Log Fields</strong>:</h3>
+<p>This behavior is observed in DNS logs (<code>event.dataset:dns</code>). The key fields are the source of the query (<code>host.hostname</code>) and the domain being queried (<code>winlog.event_data.TargetDomainName.keyword</code>).</p>
+<h3 id="3-constructing-the-rule"><strong>3. Constructing the Rule</strong>:</h3>
+<p>A simple query is insufficient. A <strong>threshold rule</strong> was built to group events by the source host. The rule then requires two conditions to be met: the total count of DNS queries from that host must exceed a high threshold (200), and the number of unique domains within those queries must also exceed a high threshold (100). This dual condition effectively isolates the unique pattern of DNS tunneling.</p>
+<h2 id="detection-logic">Detection Logic</h2>
+<p>This is a threshold-based rule that triggers when the volume and variety of DNS queries from a single host exceed a defined limit within the rule's time window.</p>
+<h3 id="query">Query:</h3>
+<p><code>event.category:network and event.dataset:dns</code></p>
+<h3 id="threshold">Threshold:</h3>
+<ul>
+<li>
+<p><strong>Group By</strong>: The rule groups DNS queries by the source host (<code>host.hostname.keyword</code> or <code>winlog.event_data.SourceIp.keyword</code>).</p>
+</li>
+<li>
+<p><strong>Condition 1 (Volume)</strong>: The total number of DNS queries from a single host must be greater than or equal to 200.</p>
+</li>
+<li>
+<p><strong>Condition 2 (Variety)</strong>: Within those queries, the number of unique domain names must be greater than or equal to 100.</p>
+</li>
+</ul>
+<h3 id="query-explanation">Query Explanation:</h3>
+<p>The rule's logic is: "Alert if any single host makes more than 200 DNS queries to at least 100 different domain names within a five-minute window." This is a strong indicator of automated data exfiltration using DNS.</p>
+<h2 id="simulation-and-validation">Simulation and Validation</h2>
+<p>This rule can be validated by running a script that generates a high volume of DNS lookups for unique, non-existent subdomains.</p>
+<h3 id="atomic-red-team-test-command">Atomic Red Team Test Command:</h3>
+<p><code>1..200 | ForEach-Object { $subdomain = -join ((65..90) + (97..122) | Get-Random -Count 15 | ForEach-Object { [char]$_ }); try { Resolve-DnsName -Name "$subdomain.example.com" -ErrorAction SilentlyContinue } catch {} }</code></p>
+<p>This PowerShell one-liner runs a loop 200 times. In each iteration, it generates a random 15-character string to act as a unique subdomain and performs a DNS lookup for [random_string].example.com. This activity generates 200 DNS queries for 200 unique subdomains from a single host, which will satisfy both threshold conditions and trigger the alert.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../application_layer_protocol/" class="btn btn-neutral float-left" title="Application Layer Protocol"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../application_layer_protocol/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
