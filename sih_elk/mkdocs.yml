@@ -1,0 +1,24 @@
+site_name: APT Detection using ELK Stack
+theme: readthedocs
+
+nav:
+  - 'Introduction': index.md
+  - 'Overall Workflow': 'overall_workflow.md'
+  - 'APT lifecycle': 'apt_lifecycle.md'
+  - 'Setup':
+    - 'ELK': 'setup/elk_setup.md'
+    - 'Virtual Machine': 'setup/vm_setup.md'
+    - 'Atomic Red Team': 'setup/art_setup.md'
+  - 'Rules created':
+    - 'Active Scanning': 'rules_created/active_scanning.md'
+    - 'Phishing': 'rules_created/phishing.md'
+    - 'Command and Scripting Interpreter': 'rules_created/command_and_scripting_interpreter.md'
+    - 'Boot or Logon Autostart Execution': 'rules_created/boot_or_logon_autostart_execution.md'
+    - 'Abuse Elevation Control Mechanism': 'rules_created/abuse_elevation_control_mechanism.md'
+    - 'Obfuscated Files or Information': 'rules_created/obfuscated_files_or_information.md'
+    - 'OS Credential Dumping': 'rules_created/os_credential_dumping.md'
+    - 'System Information Discovery': 'rules_created/system_information_discovery.md'
+    - 'Remote Services': 'rules_created/remote_services.md'
+    - 'Automated Collection': 'rules_created/automated_collection.md'
+    - 'Application Layer Protocol': 'rules_created/application_layer_protocol.md'
+    - 'Exfiltration Over Alternative Protocol': 'rules_created/exfiltration_over_alternative_protocol.md'
