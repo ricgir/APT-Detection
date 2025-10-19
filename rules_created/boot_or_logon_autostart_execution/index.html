@@ -84,15 +84,17 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#detection-logic">Detection Logic</a>
         <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#query">Query:</a>
+    <li class="toctree-l3"><a class="reference internal" href="#windows">Windows</a>
     </li>
-    <li class="toctree-l3"><a class="reference internal" href="#explanation">Explanation:</a>
+    <li class="toctree-l3"><a class="reference internal" href="#ubuntu-autostart-directories-services">Ubuntu: Autostart Directories &amp; Services</a>
     </li>
         </ul>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#simulation-and-validation">Simulation and Validation</a>
         <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#atomic-red-team-test-command">Atomic Red Team Test Command:</a>
+    <li class="toctree-l3"><a class="reference internal" href="#windows_1">Windows</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#ubuntu">Ubuntu</a>
     </li>
         </ul>
     </li>
@@ -145,29 +147,30 @@
 <p>MITRE ATT&amp;CK Tactic: <a href="">Persistence</a></p>
 <p>MITRE ATT&amp;CK Technique: <a href="">T1547.001, Boot or Logon Autostart Execution: Registry Run Keys</a></p>
 <h2 id="description">Description</h2>
-<p>This rule detects when a program establishes persistence by adding an entry to the Run keys in the Windows Registry. After gaining access, an adversary uses persistence mechanisms to ensure their malicious software automatically executes every time the computer is booted or a user logs on.</p>
-<p>This technique is one of the oldest and most common methods for maintaining a foothold. By writing to these specific registry locations, the attacker guarantees their code will survive a system reboot.</p>
+<p>This rule detects when a program establishes persistence by creating an entry in a common autostart location. After gaining access, an adversary uses persistence mechanisms to ensure their malicious software automatically executes every time the computer is booted or a user logs on. This is one of the most common methods for maintaining a foothold.</p>
+<p>On Windows, this is typically done by adding an entry to the Registry Run Keys. On Linux, this is achieved by placing a script or service file in an autostart directory such as <code>/etc/cron.d/</code> or <code>/etc/systemd/system/</code>. By writing to these specific locations, the attacker guarantees their code will survive a system reboot.</p>
 <h2 id="rule-derivation-from-log-analysis">Rule Derivation from Log Analysis</h2>
 <p>The logic for this rule was developed by targeting a well-documented and high-fidelity persistence method within Windows.</p>
 <h3 id="1-defining-the-behavior"><strong>1. Defining the Behavior</strong>:</h3>
-<p>The goal was to detect the act of creating an auto-start entry. In Windows, this is most commonly done by adding a new value to one of two specific registry keys <code>(HKCU\...\Run or HKLM\...\Run)</code>. Any program path listed here is automatically executed by the operating system at startup.</p>
+<p>The goal was to detect the act of creating or modifying an auto-start entry. This could be a new value added to a Windows Registry Run key or a new file placed in a Linux autostart directory..</p>
 <h3 id="2-translating-behavior-to-log-fields"><strong>2. Translating Behavior to Log Fields</strong>:</h3>
-<p>This action is captured by system monitoring tools that log registry modifications. The critical log fields are:</p>
+<p>This action is captured by system monitoring tools that log registry or file system modifications. The critical log fields are:</p>
 <ul>
 <li>
-<p>event.category: This must be registry to focus on registry operations.</p>
+<p><strong>Windows</strong>: <code>event.category:registry</code> and <code>registry.path</code>.</p>
 </li>
 <li>
-<p>registry.path: This field contains the full path to the key and value being modified.</p>
+<p><strong>Linux</strong>: <code>file.path</code> and <code>event.action</code> (looking for "created" or "updated").</p>
 </li>
 </ul>
 <h3 id="3-constructing-the-rule"><strong>3. Constructing the Rule</strong>:</h3>
-<p>The query was built to be highly specific. It filters all system events for only those that are registry modifications and then checks if the path of the modification falls within the two primary <code>Run</code> keys. The wildcard (*) is used to match any new program entry being added under these keys. This approach is effective because legitimate software installations that use these keys are relatively infrequent compared to daily operations, making any modification a noteworthy event.</p>
+<p>The query was built to be highly specific. It filters all system events for only those that are registry or file modifications and then checks if the path of the modification falls within a list of known autostart locations. The wildcard (*) is used to match any new program entry. This approach is effective because changes to these locations are relatively infrequent during normal operations, making any modification a noteworthy event.</p>
 <h2 id="detection-logic">Detection Logic</h2>
 <p>This is a query-based rule that triggers on a single registry modification event matching the specified criteria.</p>
-<h3 id="query">Query:</h3>
+<h3 id="windows">Windows</h3>
+<p><strong>Query</strong>:</p>
 <p><code>event.category:registry and registry.path:("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\*" or "HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\*")</code></p>
-<h3 id="explanation">Explanation:</h3>
+<p><strong>Explanation</strong>:</p>
 <p>The query identifies events where a value is created or modified within the specified Windows Registry Run keys.</p>
 <ul>
 <li>The <code>event.category:registry</code> clause filters events to only include operations involving the Windows Registry
@@ -185,11 +188,22 @@
 </li>
 </ul>
 <p>The logic triggers an alert when any registry modification event occurs within these specific auto-start execution paths.</p>
+<h3 id="ubuntu-autostart-directories-services">Ubuntu: Autostart Directories &amp; Services</h3>
+<p><strong>Query</strong>:</p>
+<p><code>file.path: ("/etc/systemd/system/*" or "/home/*/.config/autostart/*" or "/etc/cron.d/*" or "/etc/rc.local") and event.action: ("created" or "updated")</code></p>
+<p><strong>Explanation</strong>:</p>
+<p>This query alerts on the creation or modification of files in common Linux directories that are used for autostarting applications and services, such as systemd unit files, user autostart directories, and cron job directories.</p>
 <h2 id="simulation-and-validation">Simulation and Validation</h2>
+<h3 id="windows_1">Windows</h3>
 <p>This rule can be validated by using the built-in Windows Registry Editor (reg.exe) to add a new startup entry.</p>
-<h3 id="atomic-red-team-test-command">Atomic Red Team Test Command:</h3>
+<p><strong>Test Command (PowerShell)</strong>:</p>
 <p><code>reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v "AtomicPersistence" /t REG_SZ /d "C:\Windows\System32\calc.exe" /f</code></p>
 <p>This command adds a new registry value named AtomicPersistence to the current user's Run key. It instructs Windows to launch the Calculator (calc.exe) every time the user logs in. This action directly modifies one of the paths monitored by the rule and will immediately generate an alert.</p>
+<h3 id="ubuntu">Ubuntu</h3>
+<p>This test creates a new file in a cron.d directory, a common location for cron-based persistence.</p>
+<p><strong>Test Command</strong>:</p>
+<p><code>sudo touch /etc/cron.d/malicious_persistence</code></p>
+<p>Creating a file in the <code>/etc/cron.d</code> directory is a common persistence technique. This simple <code>touch</code> command creates a new file in a monitored location and should trigger a file integrity monitoring alert based on the rule's logic. The file can be removed afterward with <code>sudo rm /etc/cron.d/malicious_persistence</code>.</p>
               
             </div>
           </div><footer>

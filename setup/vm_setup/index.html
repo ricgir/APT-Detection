@@ -115,7 +115,7 @@
               
                 <h1 id="environment-setup-guide">Environment Setup Guide</h1>
 <p>This guide provides step-by-step instructions to configure the complete lab environment required for this project. Following these steps ensures that you have a functional ELK Stack ready to receive and analyze logs for threat detection.</p>
-<h1 id="pre-installation">Pre-installation</h1>
+<h1 id="pre-installation-for-windows-vm">Pre-installation for Windows VM</h1>
 <p>This phase involves gathering all the necessary software before starting the installation process.</p>
 <h2 id="windows-11-disk-image-iso">Windows 11 Disk Image (ISO)</h2>
 <p>This is the operating system that will serve as our target endpoint.</p>
@@ -157,7 +157,7 @@
 </ul>
 </li>
 </ul>
-<h1 id="installation">Installation</h1>
+<h1 id="installation-for-windows-vm">Installation for Windows VM</h1>
 <p>This phase covers the setup of the virtualization platform and the installation of the Windows 11 guest OS.</p>
 <h2 id="qemukvm-virtual-machine-manager">QEMU/KVM &amp; Virtual Machine Manager</h2>
 <p>This is the software that will create and run your virtual machine.</p>
@@ -240,9 +240,139 @@ sudo systemctl enable libvirt.service</code></p>
 </ol>
 </li>
 </ul>
-<h1 id="post-installation">Post-installation</h1>
+<h1 id="post-installation-fleet-server-and-agent-deployment">Post-installation: Fleet Server and Agent Deployment</h1>
 <p>After the Windows VM is running, you will deploy and configure the security agents needed for log collection.</p>
-<h2 id="1-enable-group-policy-editor-gpeditmsc-and-advanced-logging"><strong>1. Enable Group Policy Editor (<code>gpedit.msc</code>) and Advanced Logging</strong></h2>
+<p>Got it. Here is the guide restructured into three parts, with the Fleet Server and agent deployments combined into logical subparts under "Post-installation."</p>
+<h2 id="part-1-pre-installation-for-windows-11-vm">Part 1: Pre-installation for Windows 11 VM</h2>
+<p>This phase involves gathering all the necessary software before starting the Windows 11 installation process.</p>
+<pre><code>Windows 11 Disk Image (ISO) This is the operating system that will serve as our target endpoint.
+
+    Description: A Windows 11 ISO file is a complete copy of the Windows 11 installation media, required by the virtual machine manager to install the OS.
+
+    Instructions:
+
+        Navigate to the official Microsoft Windows 11 Download page.
+
+        Under the "Download Windows 11 Disk Image (ISO)" section, select "Windows 11 (multi-edition ISO)".
+
+        Click "Download", choose your product language, and click "Confirm".
+
+        Click the "64-bit Download" button to save the ISO file to your computer.
+
+VirtIO Drivers These are specialized drivers that boost the performance of your Windows virtual machine.
+
+    Description: VirtIO provides a set of high-performance drivers for virtualized hardware, such as network cards and disk controllers. Using them allows the guest OS (Windows) to communicate more efficiently with the host hypervisor (QEMU/KVM), resulting in significantly better I/O performance.
+
+    Instructions:
+
+        Go to the Proxmox VE Wiki for Windows VirtIO Drivers.
+
+        Download the latest stable VirtIO driver ISO file. The direct link is typically named virtio-win-x.x.xxx.iso.
+</code></pre>
+<h2 id="part-2-installation-of-windows-11-vm">Part 2: Installation of Windows 11 VM</h2>
+<p>This phase covers the setup of the virtualization platform and the installation of the Windows 11 guest OS.</p>
+<pre><code>QEMU/KVM &amp; Virtual Machine Manager This is the software that will create and run your virtual machine.
+
+    Description: QEMU is an emulator, and KVM (Kernel-based Virtual Machine) is a Linux kernel module that allows the kernel to act as a hypervisor. Together, they provide an efficient, hardware-accelerated virtualization solution. virt-manager provides a user-friendly graphical interface to manage them.
+
+    Instructions:
+
+        Check for Virtualization Support: Open a terminal on your Linux host and run egrep -c '(vmx|svm)' /proc/cpuinfo. A result greater than 0 means your CPU supports virtualization. Ensure it is enabled in your BIOS/UEFI.
+
+        Install Packages (for Debian/Ubuntu-based systems):
+        Bash
+</code></pre>
+<p>sudo apt update
+sudo apt install qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virt-manager</p>
+<p>Restart and Enable Services: After installation, restart, enable, and start the virtualization service.
+Bash</p>
+<pre><code>        sudo systemctl restart libvirt.service
+        sudo systemctl enable libvirt.service
+
+        It is also a good practice to log out and log back in, or reboot your machine, to ensure all changes are applied.
+
+Windows 11 VM Creation and Driver Setup Now you'll create the VM and install Windows along with the performance drivers.
+
+    Instructions:
+
+        Launch Virtual Machine Manager (virt-manager).
+
+        Create a new VM using your Windows 11 ISO, allocating at least 4 GB of RAM and 2 CPU cores, with a virtual disk of at least 64 GB.
+
+        On the final screen, check the box for "Customize configuration before install".
+
+        In the customization window, add a new CDROM device and load the VirtIO driver ISO into it.
+
+        Begin the installation. When asked where to install Windows, the disk will be missing. Click "Load driver", browse to the VirtIO CD, navigate to amd64\w11 in the viostor directory, and select it.
+
+        Your virtual disk will now appear. Proceed with the installation.
+
+        After Windows is running, run the virtio-win-guest-tools installer from the VirtIO CD drive to install all remaining drivers.
+</code></pre>
+<h2 id="part-3-post-installation-fleet-server-and-agent-deployment">Part 3: Post-installation: Fleet Server and Agent Deployment</h2>
+<p>After the VMs are running, you will set up the central management server (Fleet) and deploy the agents needed for log collection.</p>
+<h2 id="1-ubuntu-fleet-server-setup">1. Ubuntu &amp; Fleet Server Setup</h2>
+<p>This section covers setting up the Fleet Server and then deploying the Elastic Agent to an Ubuntu VM.</p>
+<ul>
+<li>
+<p><strong>1. Set up the Fleet Server</strong> The Fleet Server is the control plane that manages
+    all your Elastic Agents.</p>
+<ul>
+<li>
+<p><strong>Description</strong>: </p>
+<p>Agents check in with the Fleet Server for policy updates and send their data through it. It must be reachable by all your agents. For this guide, we'll install it on the same Linux host where your Elastic Stack is running.</p>
+</li>
+<li>
+<p><strong>Instructions</strong>:</p>
+<ul>
+<li>
+<p>Log in to Kibana and navigate to Management &gt; Fleet.</p>
+</li>
+<li>
+<p>Click Add Fleet Server. You will be guided to create a policy and will be presented with an installation script.</p>
+</li>
+<li>
+<p>Specify the Host URL for your Fleet Server (e.g., <code>https://&lt;your_host_ip&gt;:8220</code>).</p>
+</li>
+<li>
+<p>Kibana will generate a customized command. Copy the command provided in your UI, as it contains unique keys.</p>
+</li>
+<li>
+<p>Open a terminal on your host, paste the command, and execute it. The script will download, install, and start the Elastic Agent in "Fleet Server mode".</p>
+</li>
+<li>
+<p>Verify in the Fleet UI that the agent appears online.</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>2. Deploy the Elastic Agent to an Ubuntu VM</strong> With the Fleet Server running, you can now enroll agents from your endpoint VMs.</p>
+<ul>
+<li>
+<p><strong>Instructions</strong>:</p>
+<ul>
+<li>
+<p>In Kibana, go to <strong>Management &gt; Fleet &gt; Agents</strong> and click the "Add agent" button.</p>
+</li>
+<li>
+<p>Follow the on-screen prompts, selecting an agent policy (e.g., the default policy with "System" and "Elastic Defend" integrations).</p>
+</li>
+<li>
+<p>Kibana will generate a simple enrollment command.</p>
+</li>
+<li>
+<p>Copy this command and run it in the terminal on your Ubuntu VM. It will automatically install the agent, enroll it with your Fleet Server, and start sending data.</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="2-windows-11-vm-security-agent-setup">2. Windows 11 VM: Security Agent Setup</h2>
+<p>This section covers the classic setup for deep security visibility on Windows using Sysmon and Winlogbeat.</p>
+<h3 id="1-enable-group-policy-editor-gpeditmsc-and-advanced-logging"><strong>1. Enable Group Policy Editor (<code>gpedit.msc</code>) and Advanced Logging</strong></h3>
 <p>This tool allows you to enable detailed system auditing that isn't on by default.</p>
 <ul>
 <li>
@@ -307,7 +437,7 @@ sudo systemctl enable libvirt.service</code></p>
 </ul>
 </li>
 </ul>
-<h2 id="2-sysmon-system-monitor-setup"><strong>2. Sysmon (System Monitor) Setup</strong></h2>
+<h3 id="2-sysmon-system-monitor-setup"><strong>2. Sysmon (System Monitor) Setup</strong></h3>
 <p>Sysmon is a powerful tool that provides deep visibility into system activity.</p>
 <ul>
 <li>
@@ -336,7 +466,7 @@ sudo systemctl enable libvirt.service</code></p>
 </ol>
 </li>
 </ul>
-<h2 id="3-winlogbeat-setup"><strong>3. Winlogbeat Setup</strong></h2>
+<h3 id="3-winlogbeat-setup"><strong>3. Winlogbeat Setup</strong></h3>
 <p>This agent will collect all your logs and send them to your analysis server.</p>
 <ul>
 <li>

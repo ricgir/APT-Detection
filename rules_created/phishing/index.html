@@ -80,15 +80,17 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#detection-logic">Detection Logic</a>
         <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#query">Query:</a>
+    <li class="toctree-l3"><a class="reference internal" href="#windows">Windows</a>
     </li>
-    <li class="toctree-l3"><a class="reference internal" href="#breakdown">Breakdown:</a>
+    <li class="toctree-l3"><a class="reference internal" href="#ubuntu">Ubuntu</a>
     </li>
         </ul>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#simulation-and-validation">Simulation and Validation</a>
         <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#atomic-red-team-test-procedure">Atomic Red Team Test Procedure:</a>
+    <li class="toctree-l3"><a class="reference internal" href="#windows_1">Windows</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#ubuntu_1">Ubuntu</a>
     </li>
         </ul>
     </li>
@@ -148,20 +150,33 @@
 <p>This rule detects a common initial access pattern where a Microsoft Office application (Word, Excel, etc.) launches a command-line or scripting interpreter. This behavior is highly indicative of a successful phishing attack where a user has opened a malicious document containing embedded macros or exploits.</p>
 <p>Adversaries use this technique to gain an initial foothold on a system. The script executed by the Office application typically serves as a "dropper" or "downloader" to fetch the next stage of the malware payload from an external server.</p>
 <h2 id="rule-derivation-from-log-analysis">Rule Derivation from Log Analysis</h2>
-<p>The logic for this rule is based on identifying anomalous parent-child process relationships. Benign usage of Microsoft Office almost never involves the direct creation of a script interpreter.</p>
+<p>The logic for this rule is based on identifying anomalous <strong>parent-child process relationships</strong>. Benign usage of Microsoft Office almost never involves the direct creation of a script interpreter.</p>
 <h3 id="1-defining-the-behavior"><strong>1. Defining the Behavior</strong>:</h3>
-<p>The core of the attack is an Office application executing malicious code. In system process logs, this action is recorded as the Office process (e.g., winword.exe) starting a new, separate process, such as powershell.exe. The Office application is the parent, and the script interpreter is the child.</p>
+<p>The core of the attack is an application executing malicious code. In system process logs, this is recorded as the application process (e.g., <code>winword.exe</code> or <code>soffice.bin</code>) starting a new, separate process, such as <code>powershell.exe</code> or <code>bash</code>. The application is the parent, and the script interpreter is the child.</p>
 <h3 id="2-translating-behavior-to-log-fields"><strong>2. Translating Behavior to Log Fields</strong>:</h3>
+<ul>
+<li>
 <p>This relationship is directly observable in log data:</p>
-<p>The parent process is identified by the process.parent.name field.</p>
-<p>The child process is identified by the process.name field.</p>
+</li>
+<li>
+<p>The parent process is identified by the <code>process.parent.name</code> field.</p>
+</li>
+<li>
+<p>The child process is identified by the <code>process.name</code> field.</p>
+</li>
+</ul>
 <h3 id="3-constructing-the-rule"><strong>3. Constructing the Rule</strong>:</h3>
 <p>The query was built to find this specific, high-fidelity malicious pattern. We created a list of common Office parent processes and a list of powerful script interpreters that are frequently abused by attackers. The rule then triggers an alert only when a process from the first list spawns a process from the second list. This specific parent-child combination is a very strong indicator of compromise.</p>
 <h2 id="detection-logic">Detection Logic</h2>
 <p>This is a query-based rule that triggers on a single event matching the specified process creation pattern.</p>
-<h3 id="query">Query:</h3>
+<h3 id="windows">Windows</h3>
+<ul>
+<li>
+<p><strong>Query</strong>:</p>
 <p><code>process.parent.name:("winword.exe" or "excel.exe" or "powerpnt.exe" or "outlook.exe") and process.name:("powershell.exe" or "cmd.exe" or "wscript.exe" or "mshta.exe")</code></p>
-<h3 id="breakdown">Breakdown:</h3>
+</li>
+<li>
+<p><strong>Breakdown</strong>:</p>
 <ul>
 <li>
 <p>process.parent.name:(...): This part of the query looks for an event where the parent (creating) process is a Microsoft Office application like Word, Excel, PowerPoint, or Outlook.</p>
@@ -173,10 +188,24 @@
 <p>process.name:(...): This part looks for the child (created) process being a common script interpreter such as PowerShell, Command Prompt, Windows Script Host, or MSHTA (which executes HTML application files).</p>
 </li>
 </ul>
+</li>
+</ul>
 <p>In short, the rule alerts when an Office application is used to launch a command shell or script engine.</p>
+<h3 id="ubuntu">Ubuntu</h3>
+<ul>
+<li>
+<p><strong>Query</strong>:</p>
+<p><code>process.parent.name:("thunderbird" or "soffice.bin" or "evince") and process.name:("bash" or "sh" or "python" or "perl")</code></p>
+</li>
+<li>
+<p><strong>Breakdown</strong>: </p>
+</li>
+</ul>
+<p>This query identifies when a common email client (thunderbird), office suite (soffice.bin for LibreOffice), or document viewer (evince) on Ubuntu spawns a shell or scripting interpreter (bash, python, etc.).</p>
 <h2 id="simulation-and-validation">Simulation and Validation</h2>
+<h3 id="windows_1">Windows</h3>
 <p>This rule can be validated by creating a macro-enabled Microsoft Word document that executes a simple command.</p>
-<h3 id="atomic-red-team-test-procedure">Atomic Red Team Test Procedure:</h3>
+<p><strong>Test Command (PowerShell)</strong>:</p>
 <ul>
 <li>
 <p>Open Microsoft Word and create a new blank document.</p>
@@ -204,6 +233,12 @@ End Sub
 </li>
 </ul>
 <p>This action will cause winword.exe to spawn powershell.exe, which precisely matches the rule's logic and should trigger an alert.</p>
+<h3 id="ubuntu_1">Ubuntu</h3>
+<p>This command simulates the final stage of a phishing attack where a malicious script payload is executed after a user interacts with a malicious document or link.</p>
+<p><strong>Test Command</strong>:</p>
+<pre><code>`/bin/bash -c "echo 'Malicious payload simulation'"`
+</code></pre>
+<p>This directly executes a command using <code>/bin/bash</code>. While this test doesn't spawn <code>bash</code> from a parent application like LibreOffice, it effectively mimics how a payload would be launched. It validates that the monitoring system can detect the execution of the malicious child process, which is a critical component of the overall detection</p>
               
             </div>
           </div><footer>

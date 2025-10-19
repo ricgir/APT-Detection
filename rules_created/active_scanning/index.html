@@ -76,15 +76,21 @@
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#4-detection-logic">4. Detection Logic</a>
         <ul>
-    <li class="toctree-l4"><a class="reference internal" href="#query">Query:</a>
+    <li class="toctree-l4"><a class="reference internal" href="#windows-network-based">Windows (Network-based)</a>
     </li>
-    <li class="toctree-l4"><a class="reference internal" href="#threshold">Threshold:</a>
+    <li class="toctree-l4"><a class="reference internal" href="#ubuntu-host-based">Ubuntu (Host-based)</a>
     </li>
         </ul>
     </li>
         </ul>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#simulation-and-validation">Simulation and Validation</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#windows-external-scan">Windows (External Scan)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#ubuntu-local-scan">Ubuntu (Local Scan)</a>
+    </li>
+        </ul>
     </li>
     </ul>
                   </li>
@@ -141,17 +147,29 @@
 <p>MITRE ATT&amp;CK Tactic: <a href="https://attack.mitre.org/tactics/TA0043/">Reconnaissance</a></p>
 <p>MITRE ATT&amp;CK Technique: <a href="https://attack.mitre.org/techniques/T1595/">T1595, Active Scanning</a></p>
 <h2 id="description">Description</h2>
-<p>This rule detects a potential network port scan originating from an external IP address. Active scanning is a common reconnaissance technique used by adversaries to identify open ports, discover running services, and map potential vulnerabilities on target systems before launching an attack. This activity is analogous to a burglar checking every door and window of a building to find an unlocked entry point.
-An alert from this rule indicates that a single external source has attempted to connect to an abnormally high number of different ports across the network within a short time frame.</p>
+<p>This rule detects a potential network port scan originating from an external IP address. <strong>Active scanning</strong> is a common reconnaissance technique used by adversaries to identify open ports, discover running services, and map potential vulnerabilities on target systems before launching an attack. This activity is analogous to a burglar checking every door and window of a building to find an unlocked entry point.</p>
+<p>An alert from this rule indicates that a single external source has attempted to connect to an abnormally high number of different ports across the network within a short time frame.</p>
 <h2 id="rule-derivation-from-log-analysis">Rule Derivation from Log Analysis</h2>
 <p>The logic for this rule was developed by modeling the digital footprint of a port scan and translating it into a query. The process involved identifying key patterns in network logs that distinguish a scan from benign traffic.</p>
 <h3 id="1-defining-the-behavior"><strong>1. Defining the Behavior</strong>:</h3>
 <p>The primary goal was to identify an external actor systematically probing many network ports. The key characteristics of this behavior in raw log data are:</p>
+<ul>
+<li>
 <p>A high volume of connection attempts.</p>
+</li>
+<li>
 <p>All attempts originate from a single source IP.</p>
+</li>
+<li>
 <p>The attempts target many different destination ports.</p>
+</li>
+<li>
 <p>The events occur within a condensed time frame.</p>
+</li>
+<li>
 <p>The source is external to our network.</p>
+</li>
+</ul>
 <h3 id="2-translating-behavior-to-log-fields"><strong>2. Translating Behavior to Log Fields</strong>:</h3>
 <p>These characteristics were then mapped to specific fields and logic available in our log data:</p>
 <p>The "single source IP" is represented by the source.ip field.</p>
@@ -160,25 +178,39 @@ An alert from this rule indicates that a single external source has attempted to
 <h3 id="3-constructing-the-rule"><strong>3. Constructing the Rule</strong>:</h3>
 <p>This analysis directly led to the rule's threshold-based design:</p>
 <p>First, we filter for only the relevant data: inbound TCP connections from external IPs.
-Next, we tell the system to group the events by source.ip, as we want to analyze the behavior of each external actor individually.</p>
+Next, we tell the system to group the events by <code>source.ip</code>, as we want to analyze the behavior of each external actor individually.</p>
 <p>Finally, we set a threshold: an alert is triggered if any single group (a unique source IP) has a count of unique destination.port values that exceeds 50 within the rule's time window. This numeric threshold is the critical piece that separates the systematic, broad nature of a scan from normal, targeted network communication.</p>
 <h3 id="4-detection-logic"><strong>4. Detection Logic</strong></h3>
+<h4 id="windows-network-based">Windows (Network-based)</h4>
 <p>This is a threshold-based rule that analyzes network connection logs to identify patterns indicative of scanning behavior.</p>
-<h4 id="query">Query:</h4>
+<p><strong>Query</strong>:</p>
 <pre><code>event.category:network and event.type:connection and network.transport:tcp and not source.ip:(10.0.0.0/8 or 172.16.0.0/12 or 192.168.0.0/16)
 </code></pre>
 <p>The query filters logs to isolate inbound TCP connection events.
 Crucially, it excludes traffic originating from internal, private IP ranges <code>(10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16)</code> to prevent false positives from legitimate internal network activity.</p>
-<h4 id="threshold">Threshold:</h4>
+<p><strong>Threshold</strong>:</p>
 <p>The rule groups events by the source IP address (winlog.event_data.SourceIp.keyword).
 It triggers an alert if the number of unique destination ports (winlog.event_data.DestinationPort.keyword) from a single source IP exceeds 50 within the rule's 5-minute evaluation window.</p>
 <p>In summary, the rule alerts when a single external IP address attempts to connect to 50 or more unique ports on the network in under five minutes.</p>
+<h4 id="ubuntu-host-based">Ubuntu (Host-based)</h4>
+<p>This rule focuses on detecting the execution of common scanning tools on the host itself, which can indicate that a compromised machine is being used for internal reconnaissance.</p>
+<p><strong>Query</strong>:</p>
+<pre><code>event.dataset:auditd.log and event.action:"executed" and (process.args:"nmap" or process.args:"masscan")
+</code></pre>
+<p>This query looks for audit logs showing that the nmap or masscan process was executed.</p>
 <h2 id="simulation-and-validation">Simulation and Validation</h2>
-<p>To validate that this rule is working correctly, a port scan can be simulated against a monitored endpoint using a tool like Nmap from an external machine.</p>
-<p><strong>Atomic Red Team Test Command:</strong></p>
+<p>To validate that these rules work correctly, a port scan can be simulated against a monitored endpoint.</p>
+<h3 id="windows-external-scan">Windows (External Scan)</h3>
+<p><strong>Test Command (PowerShell)</strong>:</p>
 <pre><code>nmap -sT -p- &lt;target_IP&gt;
 </code></pre>
 <p>This command initiates a TCP connect scan (-sT) against all 65,535 ports (-p-) of the <target_IP>. This will generate a large volume of connection attempts from a single source to many distinct ports, satisfying the rule's threshold condition and triggering an alert.</p>
+<h3 id="ubuntu-local-scan">Ubuntu (Local Scan)</h3>
+<p>This command simulates a scan being run from the Ubuntu machine itself, which tests the host-based detection logic.</p>
+<p><strong>Test Command</strong>:</p>
+<pre><code>sudo nmap -sS localhost
+</code></pre>
+<p>This command uses nmap to perform a TCP SYN scan (-sS), a common and fast scanning technique, against the local machine (localhost). This action will be logged by auditd, triggering the host-based rule that detects the execution of the nmap process.</p>
               
             </div>
           </div><footer>

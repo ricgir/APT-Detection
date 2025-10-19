@@ -82,13 +82,19 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#detection-logic">Detection Logic</a>
         <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#query">Query:</a>
+    <li class="toctree-l3"><a class="reference internal" href="#windows-detecting-powershell-downloads">Windows: Detecting PowerShell Downloads</a>
     </li>
-    <li class="toctree-l3"><a class="reference internal" href="#breakdown">Breakdown:</a>
+    <li class="toctree-l3"><a class="reference internal" href="#ubuntu-detecting-obfuscated-bash-commands">Ubuntu: Detecting Obfuscated Bash Commands</a>
     </li>
         </ul>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#simulation-and-validation">Simulation and Validation</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#windows">Windows</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#ubuntu">Ubuntu</a>
+    </li>
+        </ul>
     </li>
     </ul>
                   </li>
@@ -141,12 +147,12 @@
 <p>MITRE ATT&amp;CK Tactic: <a href="https://attack.mitre.org/tactics/TA0002/">Execution</a></p>
 <p>MITRE ATT&amp;CK Technique: <a href="https://attack.mitre.org/techniques/T1059/001/">T1059.001, Command and Scripting Interpreter: PowerShell</a></p>
 <h2 id="description">Description</h2>
-<p>This rule detects an adversary using Windows PowerShell to download a file from an external source. After gaining initial access, attackers often use this technique to retrieve their primary malware, tools, or second-stage payloads from a command-and-control (C2) server onto the compromised host.</p>
-<p>Because PowerShell is a legitimate and powerful administration tool installed on all modern Windows systems, its activity can blend in with normal operations, making it a favored tool for "living off the land." An alert from this rule is a strong indicator that an active payload is being introduced into the environment.</p>
+<p>This rule detects adversaries using native command and scripting interpreters, such as <strong>PowerShell</strong> on <strong>Windows</strong> or <strong>Bash</strong> on <strong>Linux</strong>, to execute malicious code. Because these tools are installed by default and used for legitimate administration, attackers favor them for "living off the land" to download payloads, run obfuscated commands, and evade defenses.</p>
+<p>On Windows, this often involves using PowerShell to download malware from a command-and-control (C2) server. On Linux, a common technique is to use Bash to decode and execute obfuscated scripts to hide the true payload. An alert from this rule is a strong indicator of malicious execution on a host.</p>
 <h2 id="rule-derivation-from-log-analysis">Rule Derivation from Log Analysis</h2>
-<p>This rule's logic was derived by identifying the specific command-line artifacts left behind when PowerShell is used for network downloads.</p>
+<p>This rule's logic was derived by identifying specific, high-fidelity artifacts left in the command line when an interpreter is used for malicious activity.</p>
 <h3 id="1-defining-the-behavior"><strong>1. Defining the Behavior</strong>:</h3>
-<p>The core behavior is the execution of powershell.exe with command-line arguments that instruct it to initiate a file download from a URL.</p>
+<p>The core behavior is the execution of an interpreter (<code>powershell.exe</code>, <code>bash</code>) with command-line arguments that instruct it to perform a suspicious action, such as downloading a file or decoding an obfuscated string.</p>
 <h3 id="2translating-behavior-to-log-fields"><strong>2.Translating Behavior to Log Fields</strong>:</h3>
 <p>This activity is captured entirely within process execution logs:</p>
 <ul>
@@ -154,12 +160,14 @@
 <li>The specific download instructions are found in the <code>process.command_line</code> field.</li>
 </ul>
 <h3 id="3-constructing-the-rule"><strong>3. Constructing the Rule</strong>:</h3>
-<p>We identified the most common PowerShell classes, cmdlets, and aliases used for downloading files. These include the <code>.NET</code> class <code>System.Net.WebClient</code> and its methods (DownloadFile, DownloadString), as well as the native PowerShell cmdlets <code>Invoke-WebRequest</code> (aliased as iwr) and wget. The rule logic was then built to search for the execution of powershell.exe where any of these specific, high-fidelity strings are present in the command line.</p>
+<p>We identified common cmdlets, classes, and keywords used for these malicious activities. The rule logic was then built to search for the execution of a target interpreter where these specific strings are present in the command line.</p>
 <h2 id="detection-logic">Detection Logic</h2>
+<h3 id="windows-detecting-powershell-downloads">Windows: Detecting PowerShell Downloads</h3>
 <p>This is a query-based rule that triggers on a single process creation event.</p>
-<h3 id="query">Query:</h3>
-<p><code>process.name:powershell.exe and process.command_line:(*System.Net.WebClient* or *DownloadFile* or *DownloadString* or *iwr* or *wget*)</code></p>
-<h3 id="breakdown">Breakdown:</h3>
+<p><strong>Query</strong>:</p>
+<pre><code>process.name:powershell.exe and process.command_line:(*System.Net.WebClient* or *DownloadFile* or *DownloadString* or *iwr* or *wget*)
+</code></pre>
+<p><strong>Breakdown</strong>:</p>
 <p><strong>process.name:powershell.exe</strong>: The rule first looks for any event where the powershell.exe process is started.</p>
 <p><strong>and</strong>: It then requires the second condition to also be true.</p>
 <p><strong>process.command_line:(...)</strong>: The rule inspects the full command line used to launch PowerShell. It triggers if it finds any of the following keywords, which are commonly used to download files:</p>
@@ -175,11 +183,24 @@
 </li>
 </ul>
 <p>In short, the rule alerts whenever PowerShell is launched with a command that explicitly instructs it to download content from the internet.</p>
+<h3 id="ubuntu-detecting-obfuscated-bash-commands">Ubuntu: Detecting Obfuscated Bash Commands</h3>
+<p><strong>Query</strong>:</p>
+<pre><code>process.name:"bash" and process.command_line:"*base64*" and process.command_line:"*decode*"
+</code></pre>
+<p><strong>Breakdown</strong>: </p>
+<p>This query searches for instances where the bash shell is used with command-line arguments to decode a Base64 encoded string. Attackers use this encoding (obfuscation) technique to hide their malicious scripts from simple keyword detection.</p>
 <h2 id="simulation-and-validation">Simulation and Validation</h2>
 <p>This rule can be validated by running a simple PowerShell command to download a benign file from the internet.</p>
-<p><strong>Atomic Red Team Test Command:</strong></p>
+<h3 id="windows">Windows</h3>
+<p><strong>Test Command (PowerShell)</strong>:</p>
 <p><code>powershell.exe -Command "Invoke-WebRequest -Uri https://raw.githubusercontent.com/redcanaryco/atomic-red-team/master/LICENSE.txt -OutFile C:\Users\Public\license.txt"</code></p>
 <p>This command starts PowerShell and uses the Invoke-WebRequest cmdlet (iwr) to download the LICENSE.txt file from the official Atomic Red Team GitHub repository and save it to the public user's directory. This action directly matches the process.name and process.command_line logic in the rule and will generate an alert.</p>
+<h3 id="ubuntu">Ubuntu</h3>
+<p>This test executes a Base64-encoded version of the whoami command, mimicking how attackers hide commands.</p>
+<p><strong>Test Command</strong>:</p>
+<pre><code>echo "d2hvYW1p" | base64 --decode | bash
+</code></pre>
+<p>In this command, <code>d2hvYW1p</code> is the Base64 encoding for "whoami". The <code>echo</code> command sends this string to the <code>base64 --decode</code> command, which translates it back to "whoami". The result is then piped directly into <code>bash</code> for execution. This simulates the technique of running deobfuscated code and is designed to be caught by rules monitoring for this behavior.</p>
               
             </div>
           </div><footer>

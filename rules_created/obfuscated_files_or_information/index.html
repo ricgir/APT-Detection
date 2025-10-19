@@ -88,15 +88,17 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#detection-logic">Detection Logic</a>
         <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#query">Query:</a>
+    <li class="toctree-l3"><a class="reference internal" href="#windows">Windows</a>
     </li>
-    <li class="toctree-l3"><a class="reference internal" href="#query-explanation">Query Explanation:</a>
+    <li class="toctree-l3"><a class="reference internal" href="#ubuntu-hiding-data-with-dd">Ubuntu: Hiding Data with dd</a>
     </li>
         </ul>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#simulation-and-validation">Simulation and Validation</a>
         <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#atomic-red-team-test-command">Atomic Red Team Test Command:</a>
+    <li class="toctree-l3"><a class="reference internal" href="#windows_1">Windows</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#ubuntu">Ubuntu</a>
     </li>
         </ul>
     </li>
@@ -145,29 +147,38 @@
 <p>MITRE ATT&amp;CK Tactic: <a href="https://attack.mitre.org/tactics/TA0005/">Defense Evasion</a></p>
 <p>MITRE ATT&amp;CK Technique: <a href="https://attack.mitre.org/techniques/T1027/">T1027, Obfuscated Files or Information</a></p>
 <h2 id="description">Description</h2>
-<p>This rule detects attackers using Base64-encoded PowerShell commands to evade security software. This "living off the land" technique hides malicious keywords (like <code>Invoke-Mimikatz</code>) from signature-based scanners by abusing a legitimate PowerShell feature. An alert from this rule indicates that an adversary is intentionally obfuscating their commands on the system..</p>
+<p>This rule detects attackers using obfuscation techniques to hide their commands, tools, or data from security software. By encoding commands or hiding files, adversaries can evade signature-based scanners and manual inspection. An alert from this rule is a strong indicator of intentional evasion. </p>
+<p>On Windows, a classic technique is using <strong>Base64-encoded PowerShell commands</strong>. This abuses a legitimate feature to hide malicious keywords from detection. On Linux, evasion can involve hiding data in less common locations like alternate data streams or simply storing tools and payloads in hidden <strong>"dotfiles"</strong>.</p>
 <h2 id="rule-derivation-from-log-analysis">Rule Derivation from Log Analysis</h2>
-<p>The logic for this rule was derived by focusing on how an obfuscated command is executed, rather than on the content of the command itself, which is unreadable.</p>
+<p>The logic for this rule focuses on the specific artifacts of the obfuscation method, rather than the unreadable obfuscated content itself.</p>
 <h3 id="1-defining-the-behavior"><strong>1. Defining the Behavior</strong>:</h3>
-<p>The key behavior is the execution of powershell.exe with a specific command-line argument that instructs it to decode and then run a Base64 string. The presence of these specific arguments is the primary indicator of this evasion technique.</p>
-<h3 id="2-translating-behavior-to-log-fields"><strong>2. Translating Behavior to Log Fields</strong>:</h3>
-<p>The required information is found entirely within process creation logs:</p>
+<p>The goal is to detect the execution of a command or tool that is specifically designed to handle obfuscated data.</p>
 <ul>
 <li>
-<p>The executed process is captured in the process.name field (<code>powershell.exe</code>).</p>
+<p><strong>Windows</strong>: The key behavior is the execution of <code>powershell.exe</code> with a specific command-line switch (<code>-EncodedCommand</code>) that instructs it to decode and run a Base64 string.</p>
 </li>
 <li>
-<p>The specific switches used to handle encoded data are found in the <code>process.args</code> or 
-<code>process.command_line</code> field.</p>
+<p><strong>Linux</strong>: The behavior involves using a powerful utility like <code>dd</code> with a specific syntax (<code>of=*:*</code>) that indicates writing to a non-standard file stream.</p>
+</li>
+</ul>
+<h3 id="2-translating-behavior-to-log-fields"><strong>2. Translating Behavior to Log Fields</strong>:</h3>
+<p>This information is found within process creation logs:</p>
+<ul>
+<li>
+<p>The executed process is in <code>process.name</code> (e.g., <code>powershell.exe</code>, <code>dd</code>).</p>
+</li>
+<li>
+<p>The specific switches or arguments are in <code>process.args</code> or <code>process.command_line</code>.</p>
 </li>
 </ul>
 <h3 id="3-constructing-the-rule"><strong>3. Constructing the Rule</strong>:</h3>
-<p>We identified all the valid switches that PowerShell uses to accept an encoded command. The full switch is <code>-EncodedCommand</code>, but this can be abbreviated to -enc, -en, or -e. The rule was built to look for the execution of powershell.exe where <strong>any of these four switches</strong> are present in the command line. This is a high-fidelity detection because, while legitimate administrative scripts can use this feature, it is far more common in malicious and unauthorized activity.</p>
+<p>We identified the unique command-line arguments used for these techniques. The rule triggers when it sees a process launched with these high-fidelity indicators. While these features have legitimate uses, they are far more common in malicious and unauthorized activity.</p>
 <h2 id="detection-logic">Detection Logic</h2>
+<h3 id="windows">Windows</h3>
 <p>This is a query-based rule that triggers on a single process creation event.</p>
-<h3 id="query">Query:</h3>
+<p><strong>Query</strong>:</p>
 <p><code>process.name : "powershell.exe" AND (process.args:"-e" OR process.args:"-en" OR process.args:"-enc" OR process.args:"-encodedcommand")</code></p>
-<h3 id="query-explanation">Query Explanation:</h3>
+<p><strong>Query Explanation</strong>:</p>
 <p>The query identifies events where the PowerShell interpreter is launched with arguments that specify an encoded command.</p>
 <ul>
 <li>
@@ -178,11 +189,21 @@
 </li>
 </ul>
 <p>The rule triggers an alert if powershell.exe is executed with any of these specific command-line switches.</p>
+<h3 id="ubuntu-hiding-data-with-dd">Ubuntu: Hiding Data with <code>dd</code></h3>
+<p><strong>Query</strong>:</p>
+<p><code>process.name:"dd" and process.command_line: "*of=*:*"</code></p>
+<p>This query looks for the use of the <code>dd</code> utility with a command line that contains <code>of=*:*</code>. This syntax can be used to write to an alternate data stream on certain file systems, a technique for hiding malicious data from normal view.</p>
 <h2 id="simulation-and-validation">Simulation and Validation</h2>
+<h3 id="windows_1">Windows</h3>
 <p>This rule can be validated by encoding a simple command into Base64 and executing it using the <code>-EncodedCommand</code> switch.</p>
-<h3 id="atomic-red-team-test-command">Atomic Red Team Test Command:</h3>
+<p><strong>Test Command (PowerShell)</strong>:</p>
 <p><code>powershell.exe -EncodedCommand dwBoAG8AYQBtAGkA</code></p>
 <p>This command executes PowerShell and instructs it to run an encoded command. The Base64 string dwBoAG8AYQBtAGkA decodes to the simple command whoami. The PowerShell process decodes the string and executes whoami in memory. This action, which uses powershell.exe and the <code>-EncodedCommand</code> switch (which can be shortened to <code>-e, -en, or -enc</code>), directly matches the rule's logic and will generate an alert.</p>
+<h3 id="ubuntu">Ubuntu</h3>
+<p>This test simulates a simple but effective evasion technique: hiding a file by naming it with a leading dot.</p>
+<p><strong>Test Command</strong>:</p>
+<p><code>echo "hidden malware" &gt; ~/.im_not_a_virus</code></p>
+<p>This command creates a new file named <code>.im_not_a_virus</code> in the user's home directory. In Linux, files starting with a dot (<code>.</code>) are hidden from standard directory listings (like <code>ls</code>). This simulates an attacker trying to hide their artifacts on the system and is a common form of defense evasion.</p>
               
             </div>
           </div><footer>

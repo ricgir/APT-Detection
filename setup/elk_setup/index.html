@@ -61,13 +61,15 @@
     </li>
         </ul>
     </li>
+    <li class="toctree-l2"><a class="reference internal" href="#architecture-overview-component-roles">Architecture Overview: Component Roles</a>
+    </li>
     <li class="toctree-l2"><a class="reference internal" href="#prerequisites-docker-and-docker-compose-installation">Prerequisites: Docker and Docker Compose Installation</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#project-structure">Project Structure</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#installation-and-configuration-with-docker-compose">Installation and Configuration with Docker Compose</a>
         <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#create-the-logstash-pipeline-configuration">Create the Logstash Pipeline Configuration</a>
+    <li class="toctree-l3"><a class="reference internal" href="#create-the-logstash-pipeline-configuration-for-processing-windows-logs">Create the Logstash Pipeline Configuration (For processing Windows logs)</a>
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#create-the-initial-docker-composeyml">Create the Initial docker-compose.yml</a>
     </li>
@@ -165,10 +167,20 @@ The ELK Stack is a powerful open-source platform for searching, analyzing, and v
 </ul>
 <hr />
 <p>This guide prioritizes a secure-by-default setup, including the generation and use of passwords for all built-in users.</p>
+<h2 id="architecture-overview-component-roles">Architecture Overview: Component Roles</h2>
+<p>This guide sets up a central ELK stack that can receive data from various sources, including both Windows and Ubuntu VMs.</p>
+<ul>
+<li>
+<p><strong>Elasticsearch and Kibana</strong> are the core components and are <strong>required for both Windows and Ubuntu</strong>. They store, index, and visualize all incoming data.</p>
+</li>
+<li>
+<p><strong>Logstash</strong> is included in this stack specifically to serve as a data processor for log shippers like <strong>Winlogbeat</strong>, which is the method used for the <strong>Windows VM setup</strong>. Modern solutions like Elastic Agent (used for the Ubuntu VM) can send data directly to Elasticsearch, bypassing the need for a separate Logstash instance for that data path</p>
+</li>
+</ul>
 <h2 id="prerequisites-docker-and-docker-compose-installation">Prerequisites: Docker and Docker Compose Installation</h2>
-<p>Before you begin, you must have Docker Engine and Docker Compose installed on your system.
-Please follow the official instructions to download and install both components for your specific operating system.
-<a href="https://docs.docker.com/engine/install/">Official Documentation</a></p>
+<p>Before you begin, you must have Docker Engine and Docker Compose installed on your system.</p>
+<p>Please follow the official instructions to download and install both components for your specific operating system.</p>
+<p><a href="https://docs.docker.com/engine/install/">Official Documentation</a></p>
 <h2 id="project-structure">Project Structure</h2>
 <p>For a clean setup, organize your files in a root directory (e.g., my-elk-stack) like this:</p>
 <pre><code class="language-text">my-elk-stack/
@@ -181,7 +193,7 @@ Please follow the official instructions to download and install both components 
 <code>logstash/pipeline/logstash.conf</code>: Contains the configuration for the Logstash pipeline.</p>
 <h2 id="installation-and-configuration-with-docker-compose">Installation and Configuration with Docker Compose</h2>
 <p>Follow these steps sequentially to build and secure your stack.</p>
-<h3 id="create-the-logstash-pipeline-configuration">Create the Logstash Pipeline Configuration</h3>
+<h3 id="create-the-logstash-pipeline-configuration-for-processing-windows-logs">Create the Logstash Pipeline Configuration (For processing Windows logs)</h3>
 <p>This file defines how Logstash receives data, what to do with it, and where to send it.
 Create the file logstash/pipeline/logstash.conf and add the following configuration:</p>
 <p><code>./logstash/pipeline/logstash.conf</code></p>

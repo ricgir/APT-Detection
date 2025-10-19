@@ -92,21 +92,21 @@
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#2-translating-behavior-to-log-fields">2. Translating Behavior to Log Fields:</a>
     </li>
-    <li class="toctree-l3"><a class="reference internal" href="#3-constructing-the-rule">3. Constructing the Rule:</a>
-    </li>
         </ul>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#detection-logic">Detection Logic</a>
         <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#query">Query:</a>
+    <li class="toctree-l3"><a class="reference internal" href="#windows-non-browser-web-traffic">Windows: Non-Browser Web Traffic</a>
     </li>
-    <li class="toctree-l3"><a class="reference internal" href="#query-explanation">Query Explanation:</a>
+    <li class="toctree-l3"><a class="reference internal" href="#ubuntu-outbound-connection-from-tmp">Ubuntu: Outbound Connection from /tmp</a>
     </li>
         </ul>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#simulation-and-validation">Simulation and Validation</a>
         <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#atomic-red-team-test-command">Atomic Red Team Test Command:</a>
+    <li class="toctree-l3"><a class="reference internal" href="#windows">Windows</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#ubuntu">Ubuntu</a>
     </li>
         </ul>
     </li>
@@ -145,29 +145,36 @@
 <p>MITRE ATT&amp;CK Tactic: <a href="https://attack.mitre.org/tactics/TA0011/">Command and Control</a></p>
 <p>MITRE ATT&amp;CK Technique: <a href="https://attack.mitre.org/techniques/T1071/">T1071, Application Layer Protocol</a></p>
 <h2 id="description">Description</h2>
-<p>Adversaries use common protocols like <strong>HTTP</strong> or <strong>HTTPS</strong> for their command and control (C2) communications to blend in with legitimate network traffic.</p>
-<p>This rule detects this behavior by identifying network connections to standard web ports (80/443) that originate from non-browser processes. While it's normal for browsers like Chrome or Firefox to connect to these ports, it is highly suspicious when other programs (like <code>cmd.exe</code>, <code>powershell.exe</code>, or an unknown executable) do so, as this can indicate a malware beacon.</p>
+<p>This rule detects adversaries using common protocols like HTTP or HTTPS for their command and control (C2) communications to blend in with legitimate network traffic. This is a common method for malware to "beacon" out for instructions.</p>
+<p>To spot this, we look for anomalies. On <strong>Windows</strong>, this rule identifies network connections to standard web ports (80/443) that originate from <strong>non-browser processes</strong>. On <strong>Linux</strong>, it identifies outbound network connections from processes running out of <strong>suspicious locations</strong>, such as the <code>/tmp</code> directory.</p>
 <h2 id="rule-derivation-from-log-analysis">Rule Derivation from Log Analysis</h2>
-<p>The logic for this rule was developed by baselining normal web traffic and then hunting for outliers.</p>
+<p>The logic for this rule was developed by baselining normal traffic and then hunting for high-fidelity outliers that indicate malicious C2 activity.</p>
 <h3 id="1-defining-the-behavior"><strong>1. Defining the Behavior</strong>:</h3>
-<p>The goal was to find C2 traffic hiding as legitimate web browsing. The key differentiator is the <strong>source process</strong>. Legitimate HTTP/S traffic originates from a web browser or a few core system processes. Malicious C2 traffic often originates from malware, droppers, or script interpreters.</p>
-<h3 id="2-translating-behavior-to-log-fields"><strong>2. Translating Behavior to Log Fields</strong>:</h3>
-<p>This behavior is observed in network connection logs.</p>
+<p>The goal is to find C2 traffic hiding in plain sight. The key differentiators are the source of the traffic.</p>
 <ul>
 <li>
-<p>The network protocol is identified by the destination.port (80 for HTTP, 443 for HTTPS).</p>
+<p><strong>Windows</strong>: Legitimate web traffic originates from a browser. Malicious C2 traffic often originates from malware, droppers, or script interpreters (like <code>powershell.exe</code>).</p>
 </li>
 <li>
-<p>The source process is identified by <code>process.name</code>.</p>
+<p><strong>Linux</strong>: Legitimate applications are installed in standard locations like <code>/usr/bin</code>. Malware is often dropped and executed from world-writable directories like <code>/tmp</code>.</p>
 </li>
 </ul>
-<h3 id="3-constructing-the-rule"><strong>3. Constructing the Rule</strong>:</h3>
-<p>The query was built using an exclusion model. It looks for all traffic on web ports and then explicitly excludes connections from known, legitimate browsers and system processes. Any remaining traffic is flagged as suspicious, providing a powerful way to spot hidden C2 channels.</p>
+<h3 id="2-translating-behavior-to-log-fields"><strong>2. Translating Behavior to Log Fields</strong>:</h3>
+<p>This behavior is observed in network connection and process logs.</p>
+<ul>
+<li>
+<p><strong>Windows</strong>: We inspect the <code>destination.port</code> and the source <code>process.name</code>.</p>
+</li>
+<li>
+<p><strong>Linux</strong>: We inspect the source <code>process.executable</code> path and the <code>network.direction</code>.</p>
+</li>
+</ul>
 <h2 id="detection-logic">Detection Logic</h2>
+<h3 id="windows-non-browser-web-traffic">Windows: Non-Browser Web Traffic</h3>
 <p>This is a query-based rule that triggers on a single network connection event.</p>
-<h3 id="query">Query:</h3>
+<p><strong>Query</strong>:</p>
 <p><code>event.category:network and destination.port:(80 or 443) and not process.name:("chrome.exe" or "firefox.exe" or "msedge.exe" or "iexplore.exe" or "svchost.exe")</code></p>
-<h3 id="query-explanation">Query Explanation:</h3>
+<p><strong>Query Explanation</strong>:</p>
 <p>The query identifies network traffic from non-standard applications to web ports.</p>
 <ul>
 <li>
@@ -180,11 +187,24 @@
 <p><code>not process.name:(...)</code>: This is the core logic, which excludes traffic originating from common web browsers and the Windows Service Host (svchost.exe).</p>
 </li>
 </ul>
+<h3 id="ubuntu-outbound-connection-from-tmp">Ubuntu: Outbound Connection from /tmp</h3>
+<p>This query looks for network connections from a process running out of a suspicious, temporary location.</p>
+<p><strong>Query</strong>:</p>
+<p><code>process.executable:"/tmp/*" and network.direction:"outbound"</code></p>
+<p><strong>Explanation</strong>: </p>
+<p>Legitimate applications do not typically run from the <code>/tmp</code> directory. This query alerts on any process running from <code>/tmp</code> that is making an outbound network connection, which is a strong indicator of a C2 beacon.</p>
 <h2 id="simulation-and-validation">Simulation and Validation</h2>
+<h3 id="windows">Windows</h3>
 <p>This rule can be validated by initiating a web request from a non-browser application, such as PowerShell.</p>
-<h3 id="atomic-red-team-test-command">Atomic Red Team Test Command:</h3>
+<p><strong>Test Command (PowerShell)</strong>:</p>
 <p><code>Invoke-WebRequest -Uri https://www.google.com</code></p>
 <p>This command uses PowerShell's Invoke-WebRequest cmdlet to download the homepage of Google. This creates a network connection from the <code>powershell.exe</code> process to a destination on port 443 (HTTPS). Since powershell.exe is not in the rule's exclusion list, this action directly matches the rule's logic and will generate an alert.</p>
+<h3 id="ubuntu">Ubuntu</h3>
+<p>This test simulates an attacker downloading and executing their tool from <code>/tmp</code> to establish a C2 channel.</p>
+<p><strong>Test Command</strong>:</p>
+<p><code>cp /usr/bin/curl /tmp/legit_process &amp;&amp; /tmp/legit_process http://example.com -o /dev/null</code></p>
+<p><strong>Description</strong>: </p>
+<p>This command copies the curl utility to <code>/tmp</code> and then runs it from that location to make an outbound web request. This action of a process in <code>/tmp</code> making an outbound connection perfectly matches the rule's logic and will generate an alert.</p>
               
             </div>
           </div><footer>

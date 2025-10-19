@@ -90,21 +90,21 @@
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#2-translating-behavior-to-log-fields">2. Translating Behavior to Log Fields:</a>
     </li>
-    <li class="toctree-l3"><a class="reference internal" href="#3-constructing-the-rule">3. Constructing the Rule:</a>
-    </li>
         </ul>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#detection-logic">Detection Logic</a>
         <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#query">Query:</a>
+    <li class="toctree-l3"><a class="reference internal" href="#windows-archiving-collected-data">Windows: Archiving Collected Data</a>
     </li>
-    <li class="toctree-l3"><a class="reference internal" href="#query-explanation">Query Explanation:</a>
+    <li class="toctree-l3"><a class="reference internal" href="#ubuntu-automated-file-search">Ubuntu: Automated File Search</a>
     </li>
         </ul>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#simulation-and-validation">Simulation and Validation</a>
         <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#atomic-red-team-test-command">Atomic Red Team Test Command:</a>
+    <li class="toctree-l3"><a class="reference internal" href="#windows">Windows</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#ubuntu">Ubuntu</a>
     </li>
         </ul>
     </li>
@@ -145,36 +145,55 @@
 <p>MITRE ATT&amp;CK Tactic: <a href="https://attack.mitre.org/tactics/TA0009/">Collection</a></p>
 <p>MITRE ATT&amp;CK Technique: <a href="https://attack.mitre.org/techniques/T1119/">T1119, Automated Collection</a> &amp; <a href="https://attack.mitre.org/techniques/T1560/001/">T1560.001, Archive Collected Data: Archive via Utility</a></p>
 <h2 id="description">Description</h2>
-<p>Attackers use scripts to automatically gather sensitive files (.doc, .pdf, etc.). This rule detects a common follow-up action: compressing these files into a password-protected archive using tools like 7z or rar. This action stages the data, making it easier for an attacker to exfiltrate a large volume of information in a single, encrypted file.</p>
+<p>This rule detects the two primary stages of data collection: finding sensitive data and staging it for exfiltration. First, attackers often use scripts or built-in tools to automatically search a system for files of interest (e.g., <code>.doc</code>, <code>.pdf</code>,<code>.xls</code>). </p>
+<p>Next, they frequently <strong>compress this data</strong> into a single, often password-protected, archive file. This makes it easier for an attacker to exfiltrate a large volume of information in one go while evading simple content inspection.</p>
 <h2 id="rule-derivation-from-log-analysis">Rule Derivation from Log Analysis</h2>
 <p>The logic for this rule was developed by identifying the command-line footprint of data being staged for exfiltration.</p>
 <h3 id="1-defining-the-behavior"><strong>1. Defining the Behavior</strong>:</h3>
-<p>An adversary, after identifying files of interest, will often use a command-line utility to compress them into a password-protected archive. This behavior involves three key components: an archiving tool, target files (often documents), and a password.</p>
-<h3 id="2-translating-behavior-to-log-fields"><strong>2. Translating Behavior to Log Fields</strong>:</h3>
-<p>This entire action is captured in a single process creation event.</p>
 <ul>
-<li>The archiving utility is found in <code>process.name</code>.</li>
-<li>The files being targeted and the password switch are both found in the process.command_line.</li>
+<li>
+<p><strong>Automated Collection (Linux)</strong>: The behavior is an attacker using a command-line tool like find to systematically search for files with sensitive extensions.</p>
+</li>
+<li>
+<p><strong>Archiving Data (Windows)</strong>: The behavior is an attacker using a command-line utility (<code>7z</code>, <code>rar</code>, etc.) to compress document files into a password-protected archive.</p>
+</li>
 </ul>
-<h3 id="3-constructing-the-rule"><strong>3. Constructing the Rule</strong>:</h3>
-<p>The query was built to require all three behavioral components to be present. It looks for a known archiving tool, common document file extensions in the command line, and the specific command-line switches used for password protection. The combination of these three elements is a very strong indicator of malicious data staging.</p>
+<h3 id="2-translating-behavior-to-log-fields"><strong>2. Translating Behavior to Log Fields</strong>:</h3>
+<p>These actions are captured in process creation logs. The key fields are the process name (<code>process.name</code>) and the full command line (<code>process.command_line</code>), which contains the file types and specific switches being used.</p>
 <h2 id="detection-logic">Detection Logic</h2>
+<h3 id="windows-archiving-collected-data">Windows: Archiving Collected Data</h3>
 <p>This is a query-based rule that triggers on a single process creation event.</p>
-<h3 id="query">Query:</h3>
+<p><strong>Query</strong>:</p>
 <p><code>process.name:("7z.exe" or "rar.exe" or "zip.exe") and process.command_line:("*.doc*" or "*.xls*" or "*.pdf*" or "*.txt*") and process.command_line:("-p*" or "-hp*")</code></p>
-<h3 id="query-explanation">Query Explanation:</h3>
+<p><strong>Query Explanation</strong>:</p>
 <p>The query identifies the use of common archiving tools to create password-protected archives of document files.</p>
 <ul>
 <li><code>process.name:(...)</code>: This clause filters for events where a common archiving utility (7z.exe, rar.exe, zip.exe) is executed.</li>
 <li><code>process.command_line:("*.doc*"...)</code>: This clause checks that the command line contains references to common document file types.</li>
 <li><code>process.command_line:("-p*" or "-hp*")</code>: This clause checks for the presence of command-line switches used to set a password (-p for 7-Zip/Zip, -hp for RAR).</li>
 </ul>
+<h3 id="ubuntu-automated-file-search">Ubuntu: Automated File Search</h3>
+<p>This query looks for the use of the find command to search for files with common sensitive extensions, indicating an initial data discovery phase.</p>
+<p><strong>Query</strong>:</p>
+<p><code>process.name:"find" and process.command_line:("*.doc*" or "*.xls*" or "*.pdf*" or "*.txt*" or "*.bak*")</code></p>
+<p><strong>Explanation</strong>: </p>
+<p>This query alerts when the <code>find</code> command is used to locate documents, spreadsheets, backups, or other potentially sensitive files, a common first step before data is staged for exfiltration.</p>
 <h2 id="simulation-and-validation">Simulation and Validation</h2>
+<h3 id="windows">Windows</h3>
 <p>This rule can be validated by creating dummy document files and then using an archiving tool to compress them with a password.</p>
-<h3 id="atomic-red-team-test-command">Atomic Red Team Test Command:</h3>
+<p><strong>Test Command (PowerShell)</strong>:</p>
 <p><code>echo "secret" &gt; file.doc
 7z.exe a -pSuperSecret collected.zip *.doc</code></p>
-<p>This test first creates a dummy document file named file.doc. It then uses the 7-Zip utility (7z.exe) to create a new archive named collected.zip, protecting it with a password (-pSuperSecret), and adds all files with a .doc extension to it. This action perfectly matches the rule's logic and will generate an alert.</p>
+<p>This test first creates a dummy document file named file.doc. It then uses the 7-Zip utility (<code>7z.exe</code>) to create a new archive named collected.zip, protecting it with a password (<code>-pSuperSecret</code>), and adds all files with a .doc extension to it. This action perfectly matches the rule's logic and will generate an alert.</p>
+<h3 id="ubuntu">Ubuntu</h3>
+<p>This test simulates the initial data discovery phase by searching the file system for a specific file type.</p>
+<p>Test Command:</p>
+<p><strong>Step 1: Create a dummy file for the test</strong></p>
+<p><code>touch ~/Documents/sensitive_data.doc</code></p>
+<p><strong>Step 2: Run the collection command</strong></p>
+<p><code>find /home -name "*.doc"</code></p>
+<p><strong>Description</strong>: </p>
+<p>This test first creates a target file and then uses the find command to search for all files with a .doc extension. This simulates an attacker's script searching the file system for valuable documents and will trigger the detection rule.</p>
               
             </div>
           </div><footer>

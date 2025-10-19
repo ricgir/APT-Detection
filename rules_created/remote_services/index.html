@@ -88,25 +88,23 @@
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#2-translating-behavior-to-log-fields">2. Translating Behavior to Log Fields:</a>
     </li>
-    <li class="toctree-l3"><a class="reference internal" href="#3-constructing-the-rule">3. Constructing the Rule:</a>
-    </li>
         </ul>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#detection-logic">Detection Logic</a>
         <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#query">Query:</a>
+    <li class="toctree-l3"><a class="reference internal" href="#windows-psexec-execution">Windows: PsExec Execution</a>
     </li>
-    <li class="toctree-l3"><a class="reference internal" href="#query-explanation">Query Explanation:</a>
+    <li class="toctree-l3"><a class="reference internal" href="#ubuntu-internal-ssh-with-password">Ubuntu: Internal SSH with Password</a>
     </li>
         </ul>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#simulation-and-validation">Simulation and Validation</a>
         <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#atomic-red-team-test-command">Atomic Red Team Test Command:</a>
+    <li class="toctree-l3"><a class="reference internal" href="#windows">Windows</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#ubuntu">Ubuntu</a>
     </li>
         </ul>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#description_1">Description:</a>
     </li>
     </ul>
                   </li>
@@ -147,21 +145,35 @@
 <p>MITRE ATT&amp;CK Tactic: <a href="https://attack.mitre.org/tactics/TA0008/">Lateral Movement</a></p>
 <p>MITRE ATT&amp;CK Technique: <a href="https://attack.mitre.org/techniques/T1021/002/">T1021.002, Remote Services: SMB/Windows Admin Shares</a></p>
 <h2 id="description">Description</h2>
-<p>Adversaries use legitimate remote access tools to move from one compromised system to another. This rule detects the use of <strong>PsExec</strong>, a common systems administration tool, for lateral movement.</p>
-<p>Because <strong>PsExec</strong> is a legitimate tool, its use can blend in with normal administrative activity. However, it is also a favorite of attackers for executing commands on remote systems. The rule specifically looks for the creation of the <code>PSEXESVC.exe</code> service on a host, which is the unique footprint left by PsExec during its operation.</p>
+<p>This rule detects adversaries using legitimate remote access tools to move laterally from one compromised system to another within a network. By using built-in or common administrative tools, attackers can blend in with normal network traffic.</p>
+<p>On <strong>Windows</strong>, a classic and powerful tool for this is <strong>PsExec</strong>, which uses the SMB protocol to execute commands on remote hosts. On <strong>Linux</strong>, the universal tool for remote access is <strong>SSH</strong> (Secure Shell). This rule is designed to identify suspicious usage patterns of these tools that indicate lateral movement by an attacker.</p>
 <h2 id="rule-derivation-from-log-analysis">Rule Derivation from Log Analysis</h2>
 <p>The logic for this rule is based on identifying the unique and predictable artifact created by PsExec on a target system.</p>
 <h3 id="1-defining-the-behavior"><strong>1. Defining the Behavior</strong>:</h3>
-<p>When PsExec is used to run a command on a remote machine, it first copies a service executable named <code>PSEXESVC.exe</code> to the <code>SYSTEM32</code> directory of the target and then starts this service. The service then executes the desired command.</p>
+<p>The goal is to detect a remote administration tool being used to access a system.</p>
+<ul>
+<li>
+<p><strong>Windows (PsExec)</strong>: When <strong>PsExec</strong> connects to a target, it copies and runs a temporary service executable named <code>PSEXESVC.exe</code>. The creation of this process is the unique footprint.</p>
+</li>
+<li>
+<p><strong>Linux (SSH)</strong>: When a user logs in via SSH, an authentication event is generated. A successful login from an internal IP address using a password is a noteworthy event, as it could indicate an attacker reusing compromised credentials.</p>
+</li>
+</ul>
 <h3 id="2-translating-behavior-to-log-fields"><strong>2. Translating Behavior to Log Fields</strong>:</h3>
-<p>This behavior is captured as a process creation event in the logs of the target machine. The key field is process.name, which will be <code>PSEXESVC.exe</code>.</p>
-<h3 id="3-constructing-the-rule"><strong>3. Constructing the Rule</strong>:</h3>
-<p>The query was built to simply detect the creation of this specific process. Since <code>PSEXESVC.exe</code> should not be running for any other reason, its presence is a high-fidelity indicator that PsExec was used to access the machine.</p>
+<ul>
+<li>
+<p><strong>Windows</strong>: The detection uses process creation logs, focusing on the process.name.</p>
+</li>
+<li>
+<p><strong>Linux</strong>: The detection uses authentication logs, focusing on event.action, ssh.method, and source.ip.</p>
+</li>
+</ul>
 <h2 id="detection-logic">Detection Logic</h2>
+<h3 id="windows-psexec-execution">Windows: PsExec Execution</h3>
 <p>This is a query-based rule that triggers on a single process creation event.</p>
-<h3 id="query">Query:</h3>
+<p><strong>Query</strong>:</p>
 <p><code>event.category:process and process.name:PSEXESVC.exe</code></p>
-<h3 id="query-explanation">Query Explanation:</h3>
+<p><strong>Query Explanation</strong>:</p>
 <p>The query identifies the execution of the PsExec service executable.</p>
 <ul>
 <li>
@@ -171,12 +183,25 @@
 <p><code>and process.name:PSEXESVC.exe</code>: This clause provides the core logic, triggering an alert if the name of the process being created is exactly PSEXESVC.exe.</p>
 </li>
 </ul>
+<h3 id="ubuntu-internal-ssh-with-password">Ubuntu: Internal SSH with Password</h3>
+<p>This query looks for interactive SSH sessions that use password authentication and originate from within the local network.</p>
+<p><strong>Query</strong>:</p>
+<p><code>event.category:"authentication" and event.action:"ssh_login" and ssh.method:"password" and source.ip:"10.0.0.0/8"</code></p>
+<p><strong>Explanation</strong>:</p>
+<p>This query looks for successful SSH logins that use a password and originate from an <strong>internal IP address</strong>. While this can be legitimate, security best practices often recommend key-based authentication for internal systems. An alert for password-based logins could indicate an attacker moving laterally with stolen credentials.</p>
 <h2 id="simulation-and-validation">Simulation and Validation</h2>
+<h3 id="windows">Windows</h3>
 <p>This rule can be validated by using PsExec from one machine to run a command on a monitored target machine.</p>
-<h3 id="atomic-red-team-test-command">Atomic Red Team Test Command:</h3>
+<p><strong>Test Command (PowerShell)</strong>:</p>
 <p><code>PsExec.exe \\&lt;target_machine_ip&gt; -s cmd.exe /c "whoami"</code></p>
-<h2 id="description_1">Description:</h2>
+<p><strong>Description</strong>:</p>
 <p>This command uses PsExec to connect to the target machine and run the whoami command with SYSTEM (-s) privileges. This will cause the <code>PSEXESVC.exe</code> process to be created and run on the <target_machine_ip>, which directly matches the rule's logic and will generate an alert on the target.</p>
+<h3 id="ubuntu">Ubuntu</h3>
+<p>This test simulates lateral movement by using SSH to log in to the local machine.</p>
+<p><strong>Test Command</strong>:</p>
+<p><code>ssh $(whoami)@localhost</code></p>
+<p><strong>Description</strong>: </p>
+<p>This command initiates an SSH connection to <code>localhost</code> as the current user. If you authenticate with a password, this action will generate a log entry for a successful SSH login that matches the rule's logic, triggering an alert.</p>
               
             </div>
           </div><footer>
