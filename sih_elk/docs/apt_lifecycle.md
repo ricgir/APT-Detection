@@ -9,10 +9,10 @@ Adversaries probe victim networks and systems to identify potential vulnerabilit
 **Detection Strategy:**  
 Identifies brute-force patterns by detecting a high volume of failed logins from a single IP, a common byproduct of active scanning.
 
-[Detection Rule](rules_created/active_scanning.md)
+[Detection Rule (Windows & Ubuntu)](rules_created/active_scanning.md)
 
 
-**Atomic Red Team Reference:**  
+**Atomic Red Team Reference (Windows only):**  
 [T1595.003 - Scanning IP Blocks](https://www.atomicredteam.io/atomic-red-team/atomics/T1595.003)
 
 ---
@@ -24,9 +24,9 @@ Attackers send fraudulent emails containing malicious attachments or links to ga
 **Detection Strategy:**  
 Detects anomalous parent-child process relationships, such as an email client spawning a script or executable.
 
-[Detection Rule](rules_created/phishing.md)
+[Detection Rule (Windows & Ubuntu)](rules_created/phishing.md)
 
-**Atomic Red Team Reference:**  
+**Atomic Red Team Reference (Windows only):**  
 [T1566.001 - Spearphishing Attachment](https://www.atomicredteam.io/atomic-red-team/atomics/T1566.001)
 
 ---
@@ -38,9 +38,9 @@ Adversaries use command-line interfaces (like PowerShell) to execute malicious c
 **Detection Strategy:**  
 Alerts on PowerShell execution using command-line flags (`-enc`, `-encodedcommand`) designed to run obfuscated or encoded commands.
 
-[Detection Rule](rules_created/command_and_scripting_interpreter.md)
+[Detection Rule (Windows & Ubuntu)](rules_created/command_and_scripting_interpreter.md)
 
-**Atomic Red Team Reference:**  
+**Atomic Red Team Reference (Windows only):**  
 [T1059 - Command and Scripting Interpreter](https://www.atomicredteam.io/atomic-red-team/atomics/T1059)
 
 ---
@@ -52,9 +52,9 @@ Attackers configure malware to run automatically by modifying registry keys, sta
 **Detection Strategy:**  
 Monitors for modifications to common registry "Run" keys.
 
-[Detection Rule](rules_created/boot_or_logon_autostart_execution.md)
+[Detection Rule (Windows & Ubuntu)](rules_created/boot_or_logon_autostart_execution.md)
 
-**Atomic Red Team Reference:**  
+**Atomic Red Team Reference (Windows only):**  
 [T1547 - Boot or Logon Autostart Execution](https://www.atomicredteam.io/atomic-red-team/atomics/T1547)
 
 ---
@@ -66,9 +66,9 @@ Adversaries exploit system mechanisms that manage user permissions, such as UAC 
 **Detection Strategy:**  
 Detects a known UAC bypass by identifying when `fodhelper.exe` anomalously spawns a command shell.
 
-[Detection Rule](rules_created/abuse_elevation_control_mechanism.md)
+[Detection Rule (Windows & Ubuntu)](rules_created/abuse_elevation_control_mechanism.md)
 
-**Atomic Red Team Reference:**  
+**Atomic Red Team Reference (Windows only):**  
 [T1548.001 - Setuid and Setgid](https://www.atomicredteam.io/atomic-red-team/atomics/T1548.001)
 
 ---
@@ -80,9 +80,9 @@ Attackers conceal their malicious code to avoid detection, often using encryptio
 **Detection Strategy:**  
 Flags the use of `certutil.exe` with the `-decode` flag.
 
-[Detection Rule](rules_created/obfuscated_files_or_information.md)
+[Detection Rule (Windows & Ubuntu)](rules_created/obfuscated_files_or_information.md)
 
-**Atomic Red Team Reference:**  
+**Atomic Red Team Reference (Windows only):**  
 [T1027 - Obfuscated Files or Information](https://www.atomicredteam.io/atomic-red-team/atomics/T1027)
 
 ---
@@ -94,9 +94,9 @@ Extracting account login material from the OS, often by dumping memory from the 
 **Detection Strategy:**  
 Detects unauthorized processes attempting to access the memory of `lsass.exe`.
 
-[Detection Rule](rules_created/os_credential_dumping.md)
+[Detection Rule (Windows & Ubuntu)](rules_created/os_credential_dumping.md)
 
-**Atomic Red Team Reference:**  
+**Atomic Red Team Reference (Windows only):**  
 [T1003 - OS Credential Dumping](https://www.atomicredteam.io/atomic-red-team/atomics/T1003)
 
 ---
@@ -108,9 +108,9 @@ Attackers collect detailed information about the compromised system.
 **Detection Strategy:**  
 Looks for a rapid burst of system discovery commands from a single process.
 
-[Detection Rule](rules_created/system_information_discovery.md)
+[Detection Rule (Windows & Ubuntu)](rules_created/system_information_discovery.md)
 
-**Atomic Red Team Reference:**  
+**Atomic Red Team Reference (Windows only):**  
 [T1082 - System Information Discovery](https://www.atomicredteam.io/atomic-red-team/atomics/T1082)
 
 ---
@@ -122,9 +122,9 @@ Adversaries use legitimate remote access tools like RDP to move between systems.
 **Detection Strategy:**  
 Identifies non-standard RDP connections by flagging sessions not initiated by `svchost.exe`.
 
-[Detection Rule](rules_created/remote_services.md)
+[Detection Rule (Windows & Ubuntu)](rules_created/remote_services.md)
 
-**Atomic Red Team Reference:**  
+**Atomic Red Team Reference (Windows only):**  
 [T1021.001 - Remote Desktop Protocol](https://www.atomicredteam.io/atomic-red-team/atomics/T1021.001)
 
 ---
@@ -136,9 +136,9 @@ Attackers use scripts to automatically search for and gather files containing se
 **Detection Strategy:**  
 Alerts on the rapid creation of numerous sensitive file types by a shell process.
 
-[Detection Rule](rules_created/automated_collection.md)
+[Detection Rule (Windows & Ubuntu)](rules_created/automated_collection.md)
 
-**Atomic Red Team Reference:**  
+**Atomic Red Team Reference (Windows only):**  
 [T1119 - Automated Collection](https://www.atomicredteam.io/atomic-red-team/atomics/T1119)
 
 ---
@@ -150,9 +150,9 @@ Adversaries use common protocols like HTTP to blend C2 traffic with legitimate a
 **Detection Strategy:**  
 Flags network connections from non-browser processes to common code-hosting sites.
 
-[Detection Rule](rules_created/application_layer_protocol.md)
+[Detection Rule (Windows & Ubuntu)](rules_created/application_layer_protocol.md)
 
-**Atomic Red Team Reference:**  
+**Atomic Red Team Reference (Windows only):**  
 [T1071 - Application Layer Protocol](https://www.atomicredteam.io/atomic-red-team/atomics/T1071)
 
 ---
@@ -164,7 +164,7 @@ Data is stolen by transmitting it over an alternative protocol, such as DNS.
 **Detection Strategy:**  
 Detects potential DNS tunneling by identifying abnormally long DNS queries.
 
-[Detection Rule](rules_created/exfiltration_over_alternative_protocol.md)
+[Detection Rule (Windows & Ubuntu)](rules_created/exfiltration_over_alternative_protocol.md)
 
-**Atomic Red Team Reference:**  
+**Atomic Red Team Reference (Windows only):**  
 [T1048 - Exfiltration Over Alternative Protocol](https://www.atomicredteam.io/atomic-red-team/atomics/T1048)

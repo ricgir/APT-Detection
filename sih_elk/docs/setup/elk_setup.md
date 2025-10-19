@@ -18,10 +18,22 @@ The ELK Stack is a powerful open-source platform for searching, analyzing, and v
 
 This guide prioritizes a secure-by-default setup, including the generation and use of passwords for all built-in users.
 
+## Architecture Overview: Component Roles
+
+This guide sets up a central ELK stack that can receive data from various sources, including both Windows and Ubuntu VMs.
+
+
+  - **Elasticsearch and Kibana** are the core components and are **required for both Windows and Ubuntu**. They store, index, and visualize all incoming data.
+
+
+  - **Logstash** is included in this stack specifically to serve as a data processor for log shippers like **Winlogbeat**, which is the method used for the **Windows VM setup**. Modern solutions like Elastic Agent (used for the Ubuntu VM) can send data directly to Elasticsearch, bypassing the need for a separate Logstash instance for that data path
+
 
 ## Prerequisites: Docker and Docker Compose Installation
 Before you begin, you must have Docker Engine and Docker Compose installed on your system.
+
 Please follow the official instructions to download and install both components for your specific operating system.
+
 [Official Documentation](https://docs.docker.com/engine/install/)
 
 ## Project Structure
@@ -42,7 +54,7 @@ my-elk-stack/
 
 Follow these steps sequentially to build and secure your stack.
 
-### Create the Logstash Pipeline Configuration
+### Create the Logstash Pipeline Configuration (For processing Windows logs)
 
 This file defines how Logstash receives data, what to do with it, and where to send it.
 Create the file logstash/pipeline/logstash.conf and add the following configuration:

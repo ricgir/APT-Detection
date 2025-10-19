@@ -16,19 +16,19 @@ Adversaries use this technique to gain an initial foothold on a system. The scri
 
 ## Rule Derivation from Log Analysis
 
-The logic for this rule is based on identifying anomalous parent-child process relationships. Benign usage of Microsoft Office almost never involves the direct creation of a script interpreter.
+The logic for this rule is based on identifying anomalous **parent-child process relationships**. Benign usage of Microsoft Office almost never involves the direct creation of a script interpreter.
 
 ### **1. Defining the Behavior**: 
 
-The core of the attack is an Office application executing malicious code. In system process logs, this action is recorded as the Office process (e.g., winword.exe) starting a new, separate process, such as powershell.exe. The Office application is the parent, and the script interpreter is the child.
+The core of the attack is an application executing malicious code. In system process logs, this is recorded as the application process (e.g., `winword.exe` or `soffice.bin`) starting a new, separate process, such as `powershell.exe` or `bash`. The application is the parent, and the script interpreter is the child.
 
 ### **2. Translating Behavior to Log Fields**: 
 
-This relationship is directly observable in log data:
+- This relationship is directly observable in log data:
 
-The parent process is identified by the process.parent.name field.
+- The parent process is identified by the `process.parent.name` field.
 
-The child process is identified by the process.name field.
+- The child process is identified by the `process.name` field.
 
 ### **3. Constructing the Rule**: 
 
@@ -38,26 +38,42 @@ The query was built to find this specific, high-fidelity malicious pattern. We c
 
 This is a query-based rule that triggers on a single event matching the specified process creation pattern.
 
-### Query:
+### Windows
 
-`process.parent.name:("winword.exe" or "excel.exe" or "powerpnt.exe" or "outlook.exe") and process.name:("powershell.exe" or "cmd.exe" or "wscript.exe" or "mshta.exe")`
+- **Query**:
+
+    `process.parent.name:("winword.exe" or "excel.exe" or "powerpnt.exe" or "outlook.exe") and process.name:("powershell.exe" or "cmd.exe" or "wscript.exe" or "mshta.exe")`
 
 
-### Breakdown:
+- **Breakdown**:
 
-- process.parent.name:(...): This part of the query looks for an event where the parent (creating) process is a Microsoft Office application like Word, Excel, PowerPoint, or Outlook.
+    - process.parent.name:(...): This part of the query looks for an event where the parent (creating) process is a Microsoft Office application like Word, Excel, PowerPoint, or Outlook.
 
-- and: This logical operator requires both conditions to be true.
+    - and: This logical operator requires both conditions to be true.
 
-- process.name:(...): This part looks for the child (created) process being a common script interpreter such as PowerShell, Command Prompt, Windows Script Host, or MSHTA (which executes HTML application files).
+    - process.name:(...): This part looks for the child (created) process being a common script interpreter such as PowerShell, Command Prompt, Windows Script Host, or MSHTA (which executes HTML application files).
 
 In short, the rule alerts when an Office application is used to launch a command shell or script engine.
 
+### Ubuntu
+
+- **Query**:
+
+    `process.parent.name:("thunderbird" or "soffice.bin" or "evince") and process.name:("bash" or "sh" or "python" or "perl")`
+
+- **Breakdown**: 
+
+This query identifies when a common email client (thunderbird), office suite (soffice.bin for LibreOffice), or document viewer (evince) on Ubuntu spawns a shell or scripting interpreter (bash, python, etc.).
+
+
 ## Simulation and Validation
+
+
+### Windows 
 
 This rule can be validated by creating a macro-enabled Microsoft Word document that executes a simple command.
 
-### Atomic Red Team Test Procedure:
+**Test Command (PowerShell)**:
 
 - Open Microsoft Word and create a new blank document.
 
@@ -79,5 +95,15 @@ End Sub
 - Close and reopen the document on a monitored endpoint. When prompted, click "Enable Content".
 
 This action will cause winword.exe to spawn powershell.exe, which precisely matches the rule's logic and should trigger an alert.
+
+### Ubuntu
+
+This command simulates the final stage of a phishing attack where a malicious script payload is executed after a user interacts with a malicious document or link.
+
+**Test Command**:
+
+    `/bin/bash -c "echo 'Malicious payload simulation'"`
+
+This directly executes a command using `/bin/bash`. While this test doesn't spawn `bash` from a parent application like LibreOffice, it effectively mimics how a payload would be launched. It validates that the monitoring system can detect the execution of the malicious child process, which is a critical component of the overall detection
 
 

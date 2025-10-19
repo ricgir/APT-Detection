@@ -3,7 +3,7 @@
 This guide provides step-by-step instructions to configure the complete lab environment required for this project. Following these steps ensures that you have a functional ELK Stack ready to receive and analyze logs for threat detection.
 
 
-# Pre-installation
+# Pre-installation for Windows VM
 
 This phase involves gathering all the necessary software before starting the installation process.
 
@@ -37,7 +37,7 @@ These are specialized drivers that boost the performance of your virtual machine
 
     - Download the latest stable VirtIO driver ISO file. The direct link is typically named virtio-win-x.x.xxx.iso.
 
-# Installation
+# Installation for Windows VM
 
 This phase covers the setup of the virtualization platform and the installation of the Windows 11 guest OS.
 
@@ -106,11 +106,132 @@ Now you'll create the VM and install Windows along with the performance drivers.
 
     14. After Windows is installed and running, open File Explorer, go to the VirtIO CD drive, and run the virtio-win-guest-tools installer to install all remaining drivers automatically.
 
-# Post-installation
+# Post-installation: Fleet Server and Agent Deployment
 
 After the Windows VM is running, you will deploy and configure the security agents needed for log collection.
 
-## **1. Enable Group Policy Editor (`gpedit.msc`) and Advanced Logging**
+Got it. Here is the guide restructured into three parts, with the Fleet Server and agent deployments combined into logical subparts under "Post-installation."
+
+## Part 1: Pre-installation for Windows 11 VM
+
+This phase involves gathering all the necessary software before starting the Windows 11 installation process.
+
+    Windows 11 Disk Image (ISO) This is the operating system that will serve as our target endpoint.
+
+        Description: A Windows 11 ISO file is a complete copy of the Windows 11 installation media, required by the virtual machine manager to install the OS.
+
+        Instructions:
+
+            Navigate to the official Microsoft Windows 11 Download page.
+
+            Under the "Download Windows 11 Disk Image (ISO)" section, select "Windows 11 (multi-edition ISO)".
+
+            Click "Download", choose your product language, and click "Confirm".
+
+            Click the "64-bit Download" button to save the ISO file to your computer.
+
+    VirtIO Drivers These are specialized drivers that boost the performance of your Windows virtual machine.
+
+        Description: VirtIO provides a set of high-performance drivers for virtualized hardware, such as network cards and disk controllers. Using them allows the guest OS (Windows) to communicate more efficiently with the host hypervisor (QEMU/KVM), resulting in significantly better I/O performance.
+
+        Instructions:
+
+            Go to the Proxmox VE Wiki for Windows VirtIO Drivers.
+
+            Download the latest stable VirtIO driver ISO file. The direct link is typically named virtio-win-x.x.xxx.iso.
+
+## Part 2: Installation of Windows 11 VM
+
+This phase covers the setup of the virtualization platform and the installation of the Windows 11 guest OS.
+
+    QEMU/KVM & Virtual Machine Manager This is the software that will create and run your virtual machine.
+
+        Description: QEMU is an emulator, and KVM (Kernel-based Virtual Machine) is a Linux kernel module that allows the kernel to act as a hypervisor. Together, they provide an efficient, hardware-accelerated virtualization solution. virt-manager provides a user-friendly graphical interface to manage them.
+
+        Instructions:
+
+            Check for Virtualization Support: Open a terminal on your Linux host and run egrep -c '(vmx|svm)' /proc/cpuinfo. A result greater than 0 means your CPU supports virtualization. Ensure it is enabled in your BIOS/UEFI.
+
+            Install Packages (for Debian/Ubuntu-based systems):
+            Bash
+
+sudo apt update
+sudo apt install qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virt-manager
+
+Restart and Enable Services: After installation, restart, enable, and start the virtualization service.
+Bash
+
+            sudo systemctl restart libvirt.service
+            sudo systemctl enable libvirt.service
+
+            It is also a good practice to log out and log back in, or reboot your machine, to ensure all changes are applied.
+
+    Windows 11 VM Creation and Driver Setup Now you'll create the VM and install Windows along with the performance drivers.
+
+        Instructions:
+
+            Launch Virtual Machine Manager (virt-manager).
+
+            Create a new VM using your Windows 11 ISO, allocating at least 4 GB of RAM and 2 CPU cores, with a virtual disk of at least 64 GB.
+
+            On the final screen, check the box for "Customize configuration before install".
+
+            In the customization window, add a new CDROM device and load the VirtIO driver ISO into it.
+
+            Begin the installation. When asked where to install Windows, the disk will be missing. Click "Load driver", browse to the VirtIO CD, navigate to amd64\w11 in the viostor directory, and select it.
+
+            Your virtual disk will now appear. Proceed with the installation.
+
+            After Windows is running, run the virtio-win-guest-tools installer from the VirtIO CD drive to install all remaining drivers.
+
+## Part 3: Post-installation: Fleet Server and Agent Deployment
+
+After the VMs are running, you will set up the central management server (Fleet) and deploy the agents needed for log collection.
+
+## 1. Ubuntu & Fleet Server Setup
+
+This section covers setting up the Fleet Server and then deploying the Elastic Agent to an Ubuntu VM.
+
+- **1. Set up the Fleet Server** The Fleet Server is the control plane that manages
+    all your Elastic Agents.
+
+    - **Description**: 
+    
+        Agents check in with the Fleet Server for policy updates and send their data through it. It must be reachable by all your agents. For this guide, we'll install it on the same Linux host where your Elastic Stack is running.
+
+    - **Instructions**:
+
+        - Log in to Kibana and navigate to Management > Fleet.
+
+        - Click Add Fleet Server. You will be guided to create a policy and will be presented with an installation script.
+
+        - Specify the Host URL for your Fleet Server (e.g., `https://<your_host_ip>:8220`).
+
+        - Kibana will generate a customized command. Copy the command provided in your UI, as it contains unique keys.
+
+        - Open a terminal on your host, paste the command, and execute it. The script will download, install, and start the Elastic Agent in "Fleet Server mode".
+
+        - Verify in the Fleet UI that the agent appears online.
+
+- **2. Deploy the Elastic Agent to an Ubuntu VM** With the Fleet Server running, you can now enroll agents from your endpoint VMs.
+
+    - **Instructions**:
+
+        - In Kibana, go to **Management > Fleet > Agents** and click the "Add agent" button.
+
+        - Follow the on-screen prompts, selecting an agent policy (e.g., the default policy with "System" and "Elastic Defend" integrations).
+
+        - Kibana will generate a simple enrollment command.
+
+        - Copy this command and run it in the terminal on your Ubuntu VM. It will automatically install the agent, enroll it with your Fleet Server, and start sending data.
+
+
+
+## 2. Windows 11 VM: Security Agent Setup
+
+This section covers the classic setup for deep security visibility on Windows using Sysmon and Winlogbeat.
+
+### **1. Enable Group Policy Editor (`gpedit.msc`) and Advanced Logging**
 
 This tool allows you to enable detailed system auditing that isn't on by default.
 
@@ -173,7 +294,7 @@ This tool allows you to enable detailed system auditing that isn't on by default
 
     - Check the boxes for both "Success" and "Failure" and click "OK". This will enable logging for Event ID 4688, which includes command-line details.
 
-## **2. Sysmon (System Monitor) Setup**
+### **2. Sysmon (System Monitor) Setup**
 
 Sysmon is a powerful tool that provides deep visibility into system activity.
 
@@ -197,7 +318,7 @@ Sysmon is a powerful tool that provides deep visibility into system activity.
     5. Sysmon is now installed and actively logging events to `Applications and Services Logs/Microsoft/Windows/Sysmon/Operational`.
 
 
-## **3. Winlogbeat Setup**
+### **3. Winlogbeat Setup**
 
 This agent will collect all your logs and send them to your analysis server.
 

@@ -20,7 +20,7 @@ The logic for this rule was derived by identifying a "basket" of legitimate Wind
 
 ### **1. Defining the Behavior**: 
 
-The goal is to detect an actor, having just landed on a machine, trying to orient themselves. They typically run a series of commands to answer basic questions: Who am I (whoami)? What is this machine (systeminfo)? What is its IP address (ipconfig)? What network connections exist (net)? What is running (tasklist)?
+The goal is to detect an actor, having just landed on a machine, trying to orient themselves. They typically run a series of commands to answer basic questions: Who am I (`whoami`)? What is this machine (`systeminfo`)? What is its IP address (`ipconfig`)? What network connections exist (`net`)? What is running (`tasklist`)?
 
 ### **2. Translating Behavior to Log Fields**: 
 
@@ -32,13 +32,15 @@ The query was built as a simple list of these key discovery-related executables.
 
 ## Detection Logic
 
+### Windows: Common Discovery Utilities
+
 This is a query-based rule that triggers on a single process creation event.
 
-### Query:
+**Query**:
 
 `event.category : "process" AND process.name : ("whoami.exe" OR "systeminfo.exe" OR "ipconfig.exe" OR "net.exe" OR "tasklist.exe")`
 
-### Query Explanation:
+**Query Explanation**:
 
 The query identifies the execution of specific system discovery commands.
 
@@ -50,11 +52,21 @@ The query identifies the execution of specific system discovery commands.
     - `net.exe`: Used for a wide range of network information gathering.
     - `tasklist.exe`: Lists currently running processes.
 
+### Ubuntu: Common Discovery Utilities
+
+**Query**:
+
+`event.action:"executed" and process.name:("whoami" or "hostname" or "uname" or "ifconfig" or "ip" or "netstat")`
+
+This query alerts on the execution of common Linux discovery tools used to find the current user (`whoami`), system information (`hostname`, `uname`), and network configuration (`ifconfig`, `ip`, `netstat`).
+
 ## Simulation and Validation
+
+### Windows
 
 This rule can be validated by executing the targeted commands from a Command Prompt or PowerShell session.
 
-### Atomic Red Team Test Command:
+**Test Command (PowerShell)**:
 
 ```
 whoami
@@ -66,4 +78,14 @@ tasklist
 ```
 
 This sequence of commands mimics an attacker performing initial reconnaissance on a host. Each command execution creates a process event that matches one of the names in the rule's query (`whoami.exe, systeminfo.exe`, etc.), which will generate a corresponding alert.
+
+### Ubuntu
+
+This test simulates an attacker efficiently chaining multiple discovery commands together in a single line.
+
+**Test Command**:
+
+`whoami && hostname && uname -a && ip a`
+
+This chain of commands is a common attacker shortcut that quickly provides the current username, system hostname, kernel version, and network interface configuration, triggering multiple alerts in rapid succession.
 

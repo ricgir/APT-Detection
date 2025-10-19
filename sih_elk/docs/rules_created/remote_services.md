@@ -10,9 +10,9 @@ MITRE ATT&CK Technique: [T1021.002, Remote Services: SMB/Windows Admin Shares](h
 
 ## Description
 
-Adversaries use legitimate remote access tools to move from one compromised system to another. This rule detects the use of **PsExec**, a common systems administration tool, for lateral movement.
+This rule detects adversaries using legitimate remote access tools to move laterally from one compromised system to another within a network. By using built-in or common administrative tools, attackers can blend in with normal network traffic.
 
-Because **PsExec** is a legitimate tool, its use can blend in with normal administrative activity. However, it is also a favorite of attackers for executing commands on remote systems. The rule specifically looks for the creation of the `PSEXESVC.exe` service on a host, which is the unique footprint left by PsExec during its operation.
+On **Windows**, a classic and powerful tool for this is **PsExec**, which uses the SMB protocol to execute commands on remote hosts. On **Linux**, the universal tool for remote access is **SSH** (Secure Shell). This rule is designed to identify suspicious usage patterns of these tools that indicate lateral movement by an attacker.
 
 ## Rule Derivation from Log Analysis
 
@@ -20,25 +20,29 @@ The logic for this rule is based on identifying the unique and predictable artif
 
 ### **1. Defining the Behavior**: 
 
-When PsExec is used to run a command on a remote machine, it first copies a service executable named `PSEXESVC.exe` to the `SYSTEM32` directory of the target and then starts this service. The service then executes the desired command.
+The goal is to detect a remote administration tool being used to access a system.
+
+- **Windows (PsExec)**: When **PsExec** connects to a target, it copies and runs a temporary service executable named `PSEXESVC.exe`. The creation of this process is the unique footprint.
+
+- **Linux (SSH)**: When a user logs in via SSH, an authentication event is generated. A successful login from an internal IP address using a password is a noteworthy event, as it could indicate an attacker reusing compromised credentials.
 
 ### **2. Translating Behavior to Log Fields**:
 
-This behavior is captured as a process creation event in the logs of the target machine. The key field is process.name, which will be `PSEXESVC.exe`.
+- **Windows**: The detection uses process creation logs, focusing on the process.name.
 
-### **3. Constructing the Rule**: 
-
-The query was built to simply detect the creation of this specific process. Since `PSEXESVC.exe` should not be running for any other reason, its presence is a high-fidelity indicator that PsExec was used to access the machine.
+- **Linux**: The detection uses authentication logs, focusing on event.action, ssh.method, and source.ip.
 
 ## Detection Logic
 
+### Windows: PsExec Execution
+
 This is a query-based rule that triggers on a single process creation event.
 
-### Query:
+**Query**:
 
 `event.category:process and process.name:PSEXESVC.exe`
 
-### Query Explanation:
+**Query Explanation**:
 
 The query identifies the execution of the PsExec service executable.
 
@@ -46,16 +50,43 @@ The query identifies the execution of the PsExec service executable.
 
 - `and process.name:PSEXESVC.exe`: This clause provides the core logic, triggering an alert if the name of the process being created is exactly PSEXESVC.exe.
 
+### Ubuntu: Internal SSH with Password
+
+This query looks for interactive SSH sessions that use password authentication and originate from within the local network.
+
+**Query**:
+
+`event.category:"authentication" and event.action:"ssh_login" and ssh.method:"password" and source.ip:"10.0.0.0/8"`
+
+**Explanation**:
+
+This query looks for successful SSH logins that use a password and originate from an **internal IP address**. While this can be legitimate, security best practices often recommend key-based authentication for internal systems. An alert for password-based logins could indicate an attacker moving laterally with stolen credentials.
+
 ## Simulation and Validation
+
+
+### Windows
 
 This rule can be validated by using PsExec from one machine to run a command on a monitored target machine.
 
-### Atomic Red Team Test Command:
+**Test Command (PowerShell)**:
 
 `PsExec.exe \\<target_machine_ip> -s cmd.exe /c "whoami"`
 
 
-## Description:
+**Description**:
 
 This command uses PsExec to connect to the target machine and run the whoami command with SYSTEM (-s) privileges. This will cause the `PSEXESVC.exe` process to be created and run on the <target_machine_ip>, which directly matches the rule's logic and will generate an alert on the target.
+
+### Ubuntu
+
+This test simulates lateral movement by using SSH to log in to the local machine.
+
+**Test Command**:
+
+`ssh $(whoami)@localhost`
+
+**Description**: 
+
+This command initiates an SSH connection to `localhost` as the current user. If you authenticate with a password, this action will generate a log entry for a successful SSH login that matches the rule's logic, triggering an alert.
 

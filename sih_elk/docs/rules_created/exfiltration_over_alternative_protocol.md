@@ -10,36 +10,37 @@ MITRE ATT&CK Technique: [T1048.003, Exfiltration Over Alternative Protocol: DNS]
 
 ## Description
 
-Data is often stolen by transmitting it over a protocol that differs from the primary C2 channel. This rule detects **DNS tunneling**, a technique where an attacker encodes stolen data into a series of DNS queries.
+This rule detects adversaries stealing data by transmitting it over the network. To evade security controls, attackers often use protocols that are different from their primary Command and Control (C2) channel.
 
-Because DNS is a fundamental network protocol and is almost always allowed through firewalls, it provides a covert channel for exfiltration. A compromised host will make an abnormally high number of DNS requests to many unique, malicious subdomains. Each query's subdomain contains a small chunk of the stolen data. This rule identifies this **"DNS storm"** behavior.
+A common covert technique is **DNS tunneling**, where stolen data is encoded into a large volume of unique DNS queries. Because DNS is a fundamental protocol that is almost always allowed through firewalls, it provides a stealthy channel for exfiltration. A more overt method, common on Linux, is to use standard file transfer utilities like `scp` (secure copy) to send data directly to an attacker-controlled machine.
 
 ## Rule Derivation from Log Analysis
 
-The logic for this rule was developed by establishing a baseline for normal DNS activity and identifying the statistical anomalies created by DNS tunneling.
+The logic for these rules was developed by identifying the unique footprints of different exfiltration methods.
 
 ### **1. Defining the Behavior**:
 
-DNS tunneling is characterized by two main factors from a single host: a very high volume of total DNS queries and a high cardinality (uniqueness) of the domains being queried. Legitimate activity may be high volume (e.g., loading a website), but the number of unique domains is typically limited. Tunneling creates hundreds of unique subdomains.
+- **DNS Tunneling (Windows)**: This behavior is a "DNS storm" from a single host, characterized by both a very high volume of total DNS queries and a high number of unique subdomains being queried.
+
+- **Secure Copy (Ubuntu**): This behavior is the execution of the `scp` command with syntax indicating a file is being sent to a remote destination (i.e., `user@host`).
 
 ### **2. Translating Behavior to Log Fields**: 
 
-This behavior is observed in DNS logs (`event.dataset:dns`). The key fields are the source of the query (`host.hostname`) and the domain being queried (`winlog.event_data.TargetDomainName.keyword`).
+- **Windows**: The detection uses DNS logs, grouping by the source host and counting both total queries and unique domains (`winlog.event_data.TargetDomainName`).
 
-### **3. Constructing the Rule**: 
-
-A simple query is insufficient. A **threshold rule** was built to group events by the source host. The rule then requires two conditions to be met: the total count of DNS queries from that host must exceed a high threshold (200), and the number of unique domains within those queries must also exceed a high threshold (100). This dual condition effectively isolates the unique pattern of DNS tunneling.
+- **Ubuntu**: The detection uses process logs, inspecting the `process.name` and the `process.command_line` for specific patterns.
 
 ## Detection Logic
 
+### Windows: DNS Tunneling
+
 This is a threshold-based rule that triggers when the volume and variety of DNS queries from a single host exceed a defined limit within the rule's time window.
 
-### Query:
+**Query**:
 
 `event.category:network and event.dataset:dns`
 
-
-### Threshold:
+**Threshold**:
 
 - **Group By**: The rule groups DNS queries by the source host (`host.hostname.keyword` or `winlog.event_data.SourceIp.keyword`).
 
@@ -47,17 +48,48 @@ This is a threshold-based rule that triggers when the volume and variety of DNS 
 
 - **Condition 2 (Variety)**: Within those queries, the number of unique domain names must be greater than or equal to 100.
 
-### Query Explanation:
+**Query Explanation**:
 
 The rule's logic is: "Alert if any single host makes more than 200 DNS queries to at least 100 different domain names within a five-minute window." This is a strong indicator of automated data exfiltration using DNS.
 
+### Ubuntu: Exfiltration via scp
+
+This query looks for the use of scp to copy files to a remote destination.
+
+**Query**:
+
+`process.name:"scp" and process.command_line:"*@*"`
+
+**Explanation**: 
+
+This query looks for any use of the `scp` command that includes the `user@host` syntax (indicated by the `@` symbol), which signifies that a file is being copied to a remote system.
+
 ## Simulation and Validation
+
+### Windows
 
 This rule can be validated by running a script that generates a high volume of DNS lookups for unique, non-existent subdomains.
 
-### Atomic Red Team Test Command:
+**Test Command (PowerShell)**:
 
 `1..200 | ForEach-Object { $subdomain = -join ((65..90) + (97..122) | Get-Random -Count 15 | ForEach-Object { [char]$_ }); try { Resolve-DnsName -Name "$subdomain.example.com" -ErrorAction SilentlyContinue } catch {} }`
 
 This PowerShell one-liner runs a loop 200 times. In each iteration, it generates a random 15-character string to act as a unique subdomain and performs a DNS lookup for [random_string].example.com. This activity generates 200 DNS queries for 200 unique subdomains from a single host, which will satisfy both threshold conditions and trigger the alert.
 
+### Ubuntu
+
+This test simulates data exfiltration by using scp to send a file to a remote location (simulated using localhost).
+
+**Test Command**:
+
+**Step 1: Create a dummy file to exfiltrate**
+
+`echo "secret stuff" > ~/exfil_this_file.txt`
+
+**Step 2: Exfiltrate the file using scp**
+
+`scp ~/exfil_this_file.txt $(whoami)@localhost:/tmp`
+
+**Description**: 
+
+This command uses `scp` with the `user@host` syntax (`$(whoami)@localhost`). This action simulates data being copied off the system and perfectly matches the rule's logic.

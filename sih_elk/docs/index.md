@@ -25,6 +25,7 @@ This documentation is organized into four main sections to help you find what yo
 
 ### Environment Setup
 This section provides detailed instructions and configurations for setting up the entire lab environment.
+
 * **[Virtual Machine Setup](setup/vm_setup.md)**
 
 * **[ELK Setup](setup/elk_setup.md)**
@@ -32,7 +33,7 @@ This section provides detailed instructions and configurations for setting up th
 * **[Atomic Red Team Setup](setup/art_setup.md)**
 
 ### Project Workflow
-This section details the **end-to-end methodology** for rule development. It covers the complete cycle from threat simulation with **Atomic Red Team** to log analysis, KQL rule creation, and final validation.
+This section details the **end-to-end methodology** for rule development. It covers the complete cycle from threat simulation with **Atomic Red Team (Windows)** to log analysis, KQL rule creation, and final validation.
 
 * **[View the Full Workflow](overall_workflow.md)**
 

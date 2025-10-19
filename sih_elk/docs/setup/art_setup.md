@@ -4,6 +4,12 @@
 ## Introduction
 **Atomic Red Team** is an open-source library of tests mapped to the MITRE ATT&CK framework, used to safely simulate adversary behavior. This guide covers its installation and execution on a Windows VM.
 
+## Note on Applicability: 
+
+This guide is exclusively for setting up and running Atomic Red Team in a Microsoft Windows environment. 
+
+#### All commands and procedures use Windows PowerShell and are not intended for Linux or macOS.
+
 ## Prerequisites
 Before you begin, ensure your Windows VM meets the following requirements:
 
