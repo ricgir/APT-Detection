@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Boot or Logon Autostart Execution - APT Detection using ELK Stack</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Boot or Logon Autostart Execution";
+        var mkdocs_page_input_path = "rules_created/boot_or_logon_autostart_execution.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> APT Detection using ELK Stack
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Introduction</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../overall_workflow/">Overall Workflow</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../apt_lifecycle/">APT lifecycle</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Setup</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../setup/elk_setup/">ELK</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../setup/vm_setup/">Virtual Machine</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../setup/art_setup/">Atomic Red Team</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Rules created</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../active_scanning/">Active Scanning</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../phishing/">Phishing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../command_and_scripting_interpreter/">Command and Scripting Interpreter</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Boot or Logon Autostart Execution</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#description">Description</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#rule-derivation-from-log-analysis">Rule Derivation from Log Analysis</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#1-defining-the-behavior">1. Defining the Behavior:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#2-translating-behavior-to-log-fields">2. Translating Behavior to Log Fields:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#3-constructing-the-rule">3. Constructing the Rule:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#detection-logic">Detection Logic</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#windows">Windows</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#ubuntu-autostart-directories-services">Ubuntu: Autostart Directories &amp; Services</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#simulation-and-validation">Simulation and Validation</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#windows_1">Windows</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#ubuntu">Ubuntu</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../abuse_elevation_control_mechanism/">Abuse Elevation Control Mechanism</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../obfuscated_files_or_information/">Obfuscated Files or Information</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../os_credential_dumping/">OS Credential Dumping</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../system_information_discovery/">System Information Discovery</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../remote_services/">Remote Services</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../automated_collection/">Automated Collection</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../application_layer_protocol/">Application Layer Protocol</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../exfiltration_over_alternative_protocol/">Exfiltration Over Alternative Protocol</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">APT Detection using ELK Stack</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Rules created</li>
+      <li class="breadcrumb-item active">Boot or Logon Autostart Execution</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="detection-rule-persistence-via-registry-run-keys">Detection Rule: Persistence via Registry Run Keys</h1>
+<p>Rule ID: <strong>5a51e164-aaae-42a4-9537-00406b2f85ba</strong></p>
+<p>Rule Name: Persistence (T1547: Boot or Logon Autostart Execution)</p>
+<p>MITRE ATT&amp;CK Tactic: <a href="">Persistence</a></p>
+<p>MITRE ATT&amp;CK Technique: <a href="">T1547.001, Boot or Logon Autostart Execution: Registry Run Keys</a></p>
+<h2 id="description">Description</h2>
+<p>This rule detects when a program establishes persistence by creating an entry in a common autostart location. After gaining access, an adversary uses persistence mechanisms to ensure their malicious software automatically executes every time the computer is booted or a user logs on. This is one of the most common methods for maintaining a foothold.</p>
+<p>On Windows, this is typically done by adding an entry to the Registry Run Keys. On Linux, this is achieved by placing a script or service file in an autostart directory such as <code>/etc/cron.d/</code> or <code>/etc/systemd/system/</code>. By writing to these specific locations, the attacker guarantees their code will survive a system reboot.</p>
+<h2 id="rule-derivation-from-log-analysis">Rule Derivation from Log Analysis</h2>
+<p>The logic for this rule was developed by targeting a well-documented and high-fidelity persistence method within Windows.</p>
+<h3 id="1-defining-the-behavior"><strong>1. Defining the Behavior</strong>:</h3>
+<p>The goal was to detect the act of creating or modifying an auto-start entry. This could be a new value added to a Windows Registry Run key or a new file placed in a Linux autostart directory..</p>
+<h3 id="2-translating-behavior-to-log-fields"><strong>2. Translating Behavior to Log Fields</strong>:</h3>
+<p>This action is captured by system monitoring tools that log registry or file system modifications. The critical log fields are:</p>
+<ul>
+<li>
+<p><strong>Windows</strong>: <code>event.category:registry</code> and <code>registry.path</code>.</p>
+</li>
+<li>
+<p><strong>Linux</strong>: <code>file.path</code> and <code>event.action</code> (looking for "created" or "updated").</p>
+</li>
+</ul>
+<h3 id="3-constructing-the-rule"><strong>3. Constructing the Rule</strong>:</h3>
+<p>The query was built to be highly specific. It filters all system events for only those that are registry or file modifications and then checks if the path of the modification falls within a list of known autostart locations. The wildcard (*) is used to match any new program entry. This approach is effective because changes to these locations are relatively infrequent during normal operations, making any modification a noteworthy event.</p>
+<h2 id="detection-logic">Detection Logic</h2>
+<p>This is a query-based rule that triggers on a single registry modification event matching the specified criteria.</p>
+<h3 id="windows">Windows</h3>
+<p><strong>Query</strong>:</p>
+<p><code>event.category:registry and registry.path:("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\*" or "HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\*")</code></p>
+<p><strong>Explanation</strong>:</p>
+<p>The query identifies events where a value is created or modified within the specified Windows Registry Run keys.</p>
+<ul>
+<li>The <code>event.category:registry</code> clause filters events to only include operations involving the Windows Registry
+.</li>
+<li>
+<p>The <code>registry.path:(...)</code> clause matches events where the modified path is located in one of two keys:</p>
+<ul>
+<li>
+<p><code>HKEY_CURRENT_USER\...\Run\*</code>: This key contains programs that execute upon the current user's logon.</p>
+</li>
+<li>
+<p><code>HKEY_LOCAL_MACHINE\...\Run\*</code>: This key contains programs that execute for any user upon system startup.</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>The logic triggers an alert when any registry modification event occurs within these specific auto-start execution paths.</p>
+<h3 id="ubuntu-autostart-directories-services">Ubuntu: Autostart Directories &amp; Services</h3>
+<p><strong>Query</strong>:</p>
+<p><code>file.path: ("/etc/systemd/system/*" or "/home/*/.config/autostart/*" or "/etc/cron.d/*" or "/etc/rc.local") and event.action: ("created" or "updated")</code></p>
+<p><strong>Explanation</strong>:</p>
+<p>This query alerts on the creation or modification of files in common Linux directories that are used for autostarting applications and services, such as systemd unit files, user autostart directories, and cron job directories.</p>
+<h2 id="simulation-and-validation">Simulation and Validation</h2>
+<h3 id="windows_1">Windows</h3>
+<p>This rule can be validated by using the built-in Windows Registry Editor (reg.exe) to add a new startup entry.</p>
+<p><strong>Test Command (PowerShell)</strong>:</p>
+<p><code>reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v "AtomicPersistence" /t REG_SZ /d "C:\Windows\System32\calc.exe" /f</code></p>
+<p>This command adds a new registry value named AtomicPersistence to the current user's Run key. It instructs Windows to launch the Calculator (calc.exe) every time the user logs in. This action directly modifies one of the paths monitored by the rule and will immediately generate an alert.</p>
+<h3 id="ubuntu">Ubuntu</h3>
+<p>This test creates a new file in a cron.d directory, a common location for cron-based persistence.</p>
+<p><strong>Test Command</strong>:</p>
+<p><code>sudo touch /etc/cron.d/malicious_persistence</code></p>
+<p>Creating a file in the <code>/etc/cron.d</code> directory is a common persistence technique. This simple <code>touch</code> command creates a new file in a monitored location and should trigger a file integrity monitoring alert based on the rule's logic. The file can be removed afterward with <code>sudo rm /etc/cron.d/malicious_persistence</code>.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../command_and_scripting_interpreter/" class="btn btn-neutral float-left" title="Command and Scripting Interpreter"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../abuse_elevation_control_mechanism/" class="btn btn-neutral float-right" title="Abuse Elevation Control Mechanism">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../command_and_scripting_interpreter/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../abuse_elevation_control_mechanism/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

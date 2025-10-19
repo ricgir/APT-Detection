@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Remote Services - APT Detection using ELK Stack</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Remote Services";
+        var mkdocs_page_input_path = "rules_created/remote_services.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> APT Detection using ELK Stack
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Introduction</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../overall_workflow/">Overall Workflow</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../apt_lifecycle/">APT lifecycle</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Setup</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../setup/elk_setup/">ELK</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../setup/vm_setup/">Virtual Machine</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../setup/art_setup/">Atomic Red Team</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Rules created</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../active_scanning/">Active Scanning</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../phishing/">Phishing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../command_and_scripting_interpreter/">Command and Scripting Interpreter</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../boot_or_logon_autostart_execution/">Boot or Logon Autostart Execution</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../abuse_elevation_control_mechanism/">Abuse Elevation Control Mechanism</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../obfuscated_files_or_information/">Obfuscated Files or Information</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../os_credential_dumping/">OS Credential Dumping</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../system_information_discovery/">System Information Discovery</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Remote Services</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#description">Description</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#rule-derivation-from-log-analysis">Rule Derivation from Log Analysis</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#1-defining-the-behavior">1. Defining the Behavior:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#2-translating-behavior-to-log-fields">2. Translating Behavior to Log Fields:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#detection-logic">Detection Logic</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#windows-psexec-execution">Windows: PsExec Execution</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#ubuntu-internal-ssh-with-password">Ubuntu: Internal SSH with Password</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#simulation-and-validation">Simulation and Validation</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#windows">Windows</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#ubuntu">Ubuntu</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../automated_collection/">Automated Collection</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../application_layer_protocol/">Application Layer Protocol</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../exfiltration_over_alternative_protocol/">Exfiltration Over Alternative Protocol</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">APT Detection using ELK Stack</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Rules created</li>
+      <li class="breadcrumb-item active">Remote Services</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="detection-rule-lateral-movement-via-psexec">Detection Rule: Lateral Movement via PsExec</h1>
+<p>Rule ID: <strong>ec5fb1d6-1f59-428e-bfb0-0086cb81fded</strong></p>
+<p>Rule Name: Lateral Movement (T1021: Remote Services)</p>
+<p>MITRE ATT&amp;CK Tactic: <a href="https://attack.mitre.org/tactics/TA0008/">Lateral Movement</a></p>
+<p>MITRE ATT&amp;CK Technique: <a href="https://attack.mitre.org/techniques/T1021/002/">T1021.002, Remote Services: SMB/Windows Admin Shares</a></p>
+<h2 id="description">Description</h2>
+<p>This rule detects adversaries using legitimate remote access tools to move laterally from one compromised system to another within a network. By using built-in or common administrative tools, attackers can blend in with normal network traffic.</p>
+<p>On <strong>Windows</strong>, a classic and powerful tool for this is <strong>PsExec</strong>, which uses the SMB protocol to execute commands on remote hosts. On <strong>Linux</strong>, the universal tool for remote access is <strong>SSH</strong> (Secure Shell). This rule is designed to identify suspicious usage patterns of these tools that indicate lateral movement by an attacker.</p>
+<h2 id="rule-derivation-from-log-analysis">Rule Derivation from Log Analysis</h2>
+<p>The logic for this rule is based on identifying the unique and predictable artifact created by PsExec on a target system.</p>
+<h3 id="1-defining-the-behavior"><strong>1. Defining the Behavior</strong>:</h3>
+<p>The goal is to detect a remote administration tool being used to access a system.</p>
+<ul>
+<li>
+<p><strong>Windows (PsExec)</strong>: When <strong>PsExec</strong> connects to a target, it copies and runs a temporary service executable named <code>PSEXESVC.exe</code>. The creation of this process is the unique footprint.</p>
+</li>
+<li>
+<p><strong>Linux (SSH)</strong>: When a user logs in via SSH, an authentication event is generated. A successful login from an internal IP address using a password is a noteworthy event, as it could indicate an attacker reusing compromised credentials.</p>
+</li>
+</ul>
+<h3 id="2-translating-behavior-to-log-fields"><strong>2. Translating Behavior to Log Fields</strong>:</h3>
+<ul>
+<li>
+<p><strong>Windows</strong>: The detection uses process creation logs, focusing on the process.name.</p>
+</li>
+<li>
+<p><strong>Linux</strong>: The detection uses authentication logs, focusing on event.action, ssh.method, and source.ip.</p>
+</li>
+</ul>
+<h2 id="detection-logic">Detection Logic</h2>
+<h3 id="windows-psexec-execution">Windows: PsExec Execution</h3>
+<p>This is a query-based rule that triggers on a single process creation event.</p>
+<p><strong>Query</strong>:</p>
+<p><code>event.category:process and process.name:PSEXESVC.exe</code></p>
+<p><strong>Query Explanation</strong>:</p>
+<p>The query identifies the execution of the PsExec service executable.</p>
+<ul>
+<li>
+<p><code>event.category:process</code>:This clause filters events to only include process creations.</p>
+</li>
+<li>
+<p><code>and process.name:PSEXESVC.exe</code>: This clause provides the core logic, triggering an alert if the name of the process being created is exactly PSEXESVC.exe.</p>
+</li>
+</ul>
+<h3 id="ubuntu-internal-ssh-with-password">Ubuntu: Internal SSH with Password</h3>
+<p>This query looks for interactive SSH sessions that use password authentication and originate from within the local network.</p>
+<p><strong>Query</strong>:</p>
+<p><code>event.category:"authentication" and event.action:"ssh_login" and ssh.method:"password" and source.ip:"10.0.0.0/8"</code></p>
+<p><strong>Explanation</strong>:</p>
+<p>This query looks for successful SSH logins that use a password and originate from an <strong>internal IP address</strong>. While this can be legitimate, security best practices often recommend key-based authentication for internal systems. An alert for password-based logins could indicate an attacker moving laterally with stolen credentials.</p>
+<h2 id="simulation-and-validation">Simulation and Validation</h2>
+<h3 id="windows">Windows</h3>
+<p>This rule can be validated by using PsExec from one machine to run a command on a monitored target machine.</p>
+<p><strong>Test Command (PowerShell)</strong>:</p>
+<p><code>PsExec.exe \\&lt;target_machine_ip&gt; -s cmd.exe /c "whoami"</code></p>
+<p><strong>Description</strong>:</p>
+<p>This command uses PsExec to connect to the target machine and run the whoami command with SYSTEM (-s) privileges. This will cause the <code>PSEXESVC.exe</code> process to be created and run on the <target_machine_ip>, which directly matches the rule's logic and will generate an alert on the target.</p>
+<h3 id="ubuntu">Ubuntu</h3>
+<p>This test simulates lateral movement by using SSH to log in to the local machine.</p>
+<p><strong>Test Command</strong>:</p>
+<p><code>ssh $(whoami)@localhost</code></p>
+<p><strong>Description</strong>: </p>
+<p>This command initiates an SSH connection to <code>localhost</code> as the current user. If you authenticate with a password, this action will generate a log entry for a successful SSH login that matches the rule's logic, triggering an alert.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../system_information_discovery/" class="btn btn-neutral float-left" title="System Information Discovery"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../automated_collection/" class="btn btn-neutral float-right" title="Automated Collection">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../system_information_discovery/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../automated_collection/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

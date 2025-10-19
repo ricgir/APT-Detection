@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>ELK - APT Detection using ELK Stack</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "ELK";
+        var mkdocs_page_input_path = "setup/elk_setup.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> APT Detection using ELK Stack
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Introduction</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../overall_workflow/">Overall Workflow</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../apt_lifecycle/">APT lifecycle</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Setup</span></p>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">ELK</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#components">Components</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#architecture-overview-component-roles">Architecture Overview: Component Roles</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#prerequisites-docker-and-docker-compose-installation">Prerequisites: Docker and Docker Compose Installation</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#project-structure">Project Structure</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#installation-and-configuration-with-docker-compose">Installation and Configuration with Docker Compose</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#create-the-logstash-pipeline-configuration-for-processing-windows-logs">Create the Logstash Pipeline Configuration (For processing Windows logs)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#create-the-initial-docker-composeyml">Create the Initial docker-compose.yml</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#generate-passwords-for-built-in-users">Generate Passwords for Built-in Users</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#generate-a-kibana-encryption-key">Generate a Kibana Encryption Key</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#for-linuxmacoswsl">For Linux/macOS/WSL</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#alternative-command">Alternative command</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#update-docker-composeyml-with-credentials-and-keys">Update docker-compose.yml with Credentials and Keys</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#launch-the-full-elk-stack">Launch the Full ELK Stack</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#access-kibana">Access Kibana</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#post-setup-basic-configuration-in-kibana">Post-Setup: Basic Configuration in Kibana</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#creating-a-data-view">Creating a Data View</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#creating-visualizations-and-dashboards">Creating Visualizations and Dashboards</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../vm_setup/">Virtual Machine</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../art_setup/">Atomic Red Team</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Rules created</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../rules_created/active_scanning/">Active Scanning</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../rules_created/phishing/">Phishing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../rules_created/command_and_scripting_interpreter/">Command and Scripting Interpreter</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../rules_created/boot_or_logon_autostart_execution/">Boot or Logon Autostart Execution</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../rules_created/abuse_elevation_control_mechanism/">Abuse Elevation Control Mechanism</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../rules_created/obfuscated_files_or_information/">Obfuscated Files or Information</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../rules_created/os_credential_dumping/">OS Credential Dumping</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../rules_created/system_information_discovery/">System Information Discovery</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../rules_created/remote_services/">Remote Services</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../rules_created/automated_collection/">Automated Collection</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../rules_created/application_layer_protocol/">Application Layer Protocol</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../rules_created/exfiltration_over_alternative_protocol/">Exfiltration Over Alternative Protocol</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">APT Detection using ELK Stack</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Setup</li>
+      <li class="breadcrumb-item active">ELK</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="elk-stack-setup-and-configuration-guide">ELK Stack Setup and Configuration Guide</h1>
+<h2 id="introduction">Introduction</h2>
+<p>This document provides a detailed guide for deploying the <strong>ELK Stack</strong> — (Elasticsearch, Logstash, Kibana) — using <strong>Docker Compose</strong>.<br />
+The ELK Stack is a powerful open-source platform for searching, analyzing, and visualizing log data in real-time.  </p>
+<h3 id="components">Components</h3>
+<ul>
+<li><strong>Elasticsearch</strong>: A distributed search and analytics engine.</li>
+<li><strong>Logstash</strong>: A server-side data processing pipeline that ingests data from multiple sources, transforms it, and sends it to a "stash" like Elasticsearch.</li>
+<li><strong>Kibana</strong>: A visualization layer that works on top of Elasticsearch, providing users with tools to explore their data through charts, tables, and dashboards.</li>
+</ul>
+<hr />
+<p>This guide prioritizes a secure-by-default setup, including the generation and use of passwords for all built-in users.</p>
+<h2 id="architecture-overview-component-roles">Architecture Overview: Component Roles</h2>
+<p>This guide sets up a central ELK stack that can receive data from various sources, including both Windows and Ubuntu VMs.</p>
+<ul>
+<li>
+<p><strong>Elasticsearch and Kibana</strong> are the core components and are <strong>required for both Windows and Ubuntu</strong>. They store, index, and visualize all incoming data.</p>
+</li>
+<li>
+<p><strong>Logstash</strong> is included in this stack specifically to serve as a data processor for log shippers like <strong>Winlogbeat</strong>, which is the method used for the <strong>Windows VM setup</strong>. Modern solutions like Elastic Agent (used for the Ubuntu VM) can send data directly to Elasticsearch, bypassing the need for a separate Logstash instance for that data path</p>
+</li>
+</ul>
+<h2 id="prerequisites-docker-and-docker-compose-installation">Prerequisites: Docker and Docker Compose Installation</h2>
+<p>Before you begin, you must have Docker Engine and Docker Compose installed on your system.</p>
+<p>Please follow the official instructions to download and install both components for your specific operating system.</p>
+<p><a href="https://docs.docker.com/engine/install/">Official Documentation</a></p>
+<h2 id="project-structure">Project Structure</h2>
+<p>For a clean setup, organize your files in a root directory (e.g., my-elk-stack) like this:</p>
+<pre><code class="language-text">my-elk-stack/
+├── docker-compose.yml
+└── logstash/
+    └── pipeline/
+        └── logstash.conf
+</code></pre>
+<p><code>docker-compose.yml</code>: Defines the three services, their configurations, networks, and volumes.
+<code>logstash/pipeline/logstash.conf</code>: Contains the configuration for the Logstash pipeline.</p>
+<h2 id="installation-and-configuration-with-docker-compose">Installation and Configuration with Docker Compose</h2>
+<p>Follow these steps sequentially to build and secure your stack.</p>
+<h3 id="create-the-logstash-pipeline-configuration-for-processing-windows-logs">Create the Logstash Pipeline Configuration (For processing Windows logs)</h3>
+<p>This file defines how Logstash receives data, what to do with it, and where to send it.
+Create the file logstash/pipeline/logstash.conf and add the following configuration:</p>
+<p><code>./logstash/pipeline/logstash.conf</code></p>
+<pre><code class="language-ini">input {
+    beats {
+        port =&gt; 5044
+    }
+    tcp {
+        port =&gt; 5000
+        codec =&gt; json_lines
+    }
+}
+
+output {
+    elasticsearch {
+        hosts =&gt; [&quot;http://elasticsearch:9200&quot;]
+        index =&gt; &quot;logstash-%{+YYYY.MM.dd}&quot;
+        # Use environment variables for secure credential management
+        user =&gt; &quot;${ELASTICSEARCH_USERNAME}&quot;
+        password =&gt; &quot;${ELASTICSEARCH_PASSWORD}&quot;
+    }
+}
+</code></pre>
+<h3 id="create-the-initial-docker-composeyml">Create the Initial docker-compose.yml</h3>
+<p>This file outlines the ELK services (Elasticsearch, Logstash, Kibana) without any sensitive passwords yet.
+Create the docker-compose.yml file in your project's root directory:</p>
+<p><code>./docker-compose.yml</code></p>
+<pre><code class="language-markdown">```yaml
+version: '3.8'
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.2
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - &quot;ES_JAVA_OPTS=-Xms1g -Xmx1g&quot;
+      - xpack.security.enabled=true
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    ports:
+      - &quot;9200:9200&quot;
+      - &quot;9300:9300&quot;
+    networks:
+      - elknet
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.12.2
+    container_name: logstash
+    volumes:
+      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
+    ports:
+      - &quot;5044:5044&quot;
+      - &quot;5000:5000/tcp&quot;
+      - &quot;5000:5000/udp&quot;
+    networks:
+      - elknet
+    depends_on:
+      - elasticsearch
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.12.2
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - &quot;5601:5601&quot;
+    networks:
+      - elknet
+    depends_on:
+      - elasticsearch
+
+volumes:
+  esdata:
+    driver: local
+
+networks:
+  elknet:
+    driver: bridge
+
+</code></pre>
+<h3 id="generate-passwords-for-built-in-users">Generate Passwords for Built-in Users</h3>
+<p>This crucial security step creates unique, secure passwords for all internal ELK users.
+Start only the Elasticsearch container:</p>
+<p><code>bash
+  docker-compose up -d elasticsearch</code> </p>
+<p>Run the password generation script and <strong>save the output</strong>:</p>
+<p><code>bash
+  docker exec -it elasticsearch /usr/share/elasticsearch/bin/elasticsearch-setup-passwords auto</code>
+Stop the container:</p>
+<p><code>bash
+  docker-compose down</code></p>
+<h3 id="generate-a-kibana-encryption-key">Generate a Kibana Encryption Key</h3>
+<p>This key encrypts sensitive data saved within Kibana, such as alerting configurations.
+Generate a 32-character key using one of the commands below and save the output:
+Bash</p>
+<h3 id="for-linuxmacoswsl">For Linux/macOS/WSL</h3>
+<p><code>bash
+  openssl rand -hex 16</code></p>
+<h3 id="alternative-command">Alternative command</h3>
+<p><code>bash
+  head /dev/urandom | tr -dc A-Za-z0-9 | head -c 32</code></p>
+<h3 id="update-docker-composeyml-with-credentials-and-keys">Update docker-compose.yml with Credentials and Keys</h3>
+<p>Here, you embed the generated passwords and keys into your service definitions to secure the stack.</p>
+<p>Edit your docker-compose.yml file and add the environment variables shown below. Replace the placeholder values (e.g., your_elastic_password) with the actual credentials you saved.</p>
+<p><code>./docker-compose.yml</code> <strong>(Final Version)</strong></p>
+<pre><code class="language-markdown">version: '3.8'
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.2
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - &quot;ES_JAVA_OPTS=-Xms1g -Xmx1g&quot;
+      - xpack.security.enabled=true
+      # --- ADD PASSWORD FOR THE 'elastic' SUPERUSER ---
+      - ELASTIC_PASSWORD=your_elastic_password 
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    ports:
+      - &quot;9200:9200&quot;
+      - &quot;9300:9300&quot;
+    networks:
+      - elknet
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.12.2
+    container_name: logstash
+    volumes:
+      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
+    ports:
+      - &quot;5044:5044&quot;
+      - &quot;5000:5000/tcp&quot;
+      - &quot;5000:5000/udp&quot;
+    # --- ADD CREDENTIALS FOR LOGSTASH TO CONNECT TO ELASTICSEARCH ---
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=logstash_system
+      - ELASTICSEARCH_PASSWORD=your_logstash_system_password
+    networks:
+      - elknet
+    depends_on:
+      - elasticsearch
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.12.2
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      # --- ADD CREDENTIALS FOR KIBANA TO CONNECT TO ELASTICSEARCH ---
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=your_kibana_system_password
+      # --- ADD THE KIBANA ENCRYPTION KEY ---
+      - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=your_generated_32_character_key
+    ports:
+      - &quot;5601:5601&quot;
+    networks:
+      - elknet
+    depends_on:
+      - elasticsearch
+
+volumes:
+  esdata:
+    driver: local
+
+networks:
+  elknet:
+    driver: bridge
+</code></pre>
+<h3 id="launch-the-full-elk-stack">Launch the Full ELK Stack</h3>
+<p>This command reads your final docker-compose.yml file and starts all the configured containers.
+  <code>bash
+  docker-compose up -d</code></p>
+<h3 id="access-kibana">Access Kibana</h3>
+<p>This is the final step to log in and access the ELK Stack's powerful user interface. <a href="http://localhost:5601">URL</a></p>
+<p><strong>Username</strong>: elastic</p>
+<p><strong>Password</strong>: The your_elastic_password you saved in Step 4.3.</p>
+<h2 id="post-setup-basic-configuration-in-kibana">Post-Setup: Basic Configuration in Kibana</h2>
+<h3 id="creating-a-data-view">Creating a Data View</h3>
+<p>This tells Kibana which Elasticsearch index pattern to use for discovering and analyzing your data.</p>
+<ol>
+<li>Navigate to Stack Management &gt; Kibana &gt; Data Views.</li>
+<li>Click Create data view.</li>
+<li>For the Name, enter logstash-*.</li>
+<li>Select a Timestamp field (usually @timestamp).</li>
+<li>Click Create data view.</li>
+</ol>
+<h3 id="creating-visualizations-and-dashboards">Creating Visualizations and Dashboards</h3>
+<p>This is where you build charts, graphs, and unified dashboards to visualize your log data.</p>
+<ol>
+<li>Navigate to the Visualize Library and click Create visualization.</li>
+<li>Choose a visualization type (e.g., Pie, Bar Chart) and select your logstash-* data view.</li>
+<li>Configure and save the visualization.</li>
+<li>Navigate to the Dashboard section, create a new dashboard, and add your saved visualizations from the library.</li>
+</ol>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../../apt_lifecycle/" class="btn btn-neutral float-left" title="APT lifecycle"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../vm_setup/" class="btn btn-neutral float-right" title="Virtual Machine">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../../apt_lifecycle/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../vm_setup/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

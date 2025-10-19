@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Active Scanning - APT Detection using ELK Stack</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Active Scanning";
+        var mkdocs_page_input_path = "rules_created/active_scanning.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> APT Detection using ELK Stack
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Introduction</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../overall_workflow/">Overall Workflow</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../apt_lifecycle/">APT lifecycle</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Setup</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../setup/elk_setup/">ELK</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../setup/vm_setup/">Virtual Machine</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../setup/art_setup/">Atomic Red Team</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Rules created</span></p>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Active Scanning</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#description">Description</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#rule-derivation-from-log-analysis">Rule Derivation from Log Analysis</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#1-defining-the-behavior">1. Defining the Behavior:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#2-translating-behavior-to-log-fields">2. Translating Behavior to Log Fields:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#3-constructing-the-rule">3. Constructing the Rule:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#4-detection-logic">4. Detection Logic</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#windows-network-based">Windows (Network-based)</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#ubuntu-host-based">Ubuntu (Host-based)</a>
+    </li>
+        </ul>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#simulation-and-validation">Simulation and Validation</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#windows-external-scan">Windows (External Scan)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#ubuntu-local-scan">Ubuntu (Local Scan)</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../phishing/">Phishing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../command_and_scripting_interpreter/">Command and Scripting Interpreter</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../boot_or_logon_autostart_execution/">Boot or Logon Autostart Execution</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../abuse_elevation_control_mechanism/">Abuse Elevation Control Mechanism</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../obfuscated_files_or_information/">Obfuscated Files or Information</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../os_credential_dumping/">OS Credential Dumping</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../system_information_discovery/">System Information Discovery</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../remote_services/">Remote Services</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../automated_collection/">Automated Collection</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../application_layer_protocol/">Application Layer Protocol</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../exfiltration_over_alternative_protocol/">Exfiltration Over Alternative Protocol</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">APT Detection using ELK Stack</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Rules created</li>
+      <li class="breadcrumb-item active">Active Scanning</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="detection-rule-reconnaissance-active-scanning">Detection Rule: Reconnaissance - Active Scanning</h1>
+<p>Rule ID: <code>05e649fb-4bdf-4f4a-82ef-52b83a4c9090</code></p>
+<p>Rule Name: <strong>Reconnaissance (T1595: Active Scanning)</strong></p>
+<p>MITRE ATT&amp;CK Tactic: <a href="https://attack.mitre.org/tactics/TA0043/">Reconnaissance</a></p>
+<p>MITRE ATT&amp;CK Technique: <a href="https://attack.mitre.org/techniques/T1595/">T1595, Active Scanning</a></p>
+<h2 id="description">Description</h2>
+<p>This rule detects a potential network port scan originating from an external IP address. <strong>Active scanning</strong> is a common reconnaissance technique used by adversaries to identify open ports, discover running services, and map potential vulnerabilities on target systems before launching an attack. This activity is analogous to a burglar checking every door and window of a building to find an unlocked entry point.</p>
+<p>An alert from this rule indicates that a single external source has attempted to connect to an abnormally high number of different ports across the network within a short time frame.</p>
+<h2 id="rule-derivation-from-log-analysis">Rule Derivation from Log Analysis</h2>
+<p>The logic for this rule was developed by modeling the digital footprint of a port scan and translating it into a query. The process involved identifying key patterns in network logs that distinguish a scan from benign traffic.</p>
+<h3 id="1-defining-the-behavior"><strong>1. Defining the Behavior</strong>:</h3>
+<p>The primary goal was to identify an external actor systematically probing many network ports. The key characteristics of this behavior in raw log data are:</p>
+<ul>
+<li>
+<p>A high volume of connection attempts.</p>
+</li>
+<li>
+<p>All attempts originate from a single source IP.</p>
+</li>
+<li>
+<p>The attempts target many different destination ports.</p>
+</li>
+<li>
+<p>The events occur within a condensed time frame.</p>
+</li>
+<li>
+<p>The source is external to our network.</p>
+</li>
+</ul>
+<h3 id="2-translating-behavior-to-log-fields"><strong>2. Translating Behavior to Log Fields</strong>:</h3>
+<p>These characteristics were then mapped to specific fields and logic available in our log data:</p>
+<p>The "single source IP" is represented by the source.ip field.</p>
+<p>The "many different destination ports" is identified by looking for a high number of unique values in the destination.port field.</p>
+<p>To focus on "external" traffic, we filter out all logs where the source.ip belongs to a known internal (private RFC 1918) address range.</p>
+<h3 id="3-constructing-the-rule"><strong>3. Constructing the Rule</strong>:</h3>
+<p>This analysis directly led to the rule's threshold-based design:</p>
+<p>First, we filter for only the relevant data: inbound TCP connections from external IPs.
+Next, we tell the system to group the events by <code>source.ip</code>, as we want to analyze the behavior of each external actor individually.</p>
+<p>Finally, we set a threshold: an alert is triggered if any single group (a unique source IP) has a count of unique destination.port values that exceeds 50 within the rule's time window. This numeric threshold is the critical piece that separates the systematic, broad nature of a scan from normal, targeted network communication.</p>
+<h3 id="4-detection-logic"><strong>4. Detection Logic</strong></h3>
+<h4 id="windows-network-based">Windows (Network-based)</h4>
+<p>This is a threshold-based rule that analyzes network connection logs to identify patterns indicative of scanning behavior.</p>
+<p><strong>Query</strong>:</p>
+<pre><code>event.category:network and event.type:connection and network.transport:tcp and not source.ip:(10.0.0.0/8 or 172.16.0.0/12 or 192.168.0.0/16)
+</code></pre>
+<p>The query filters logs to isolate inbound TCP connection events.
+Crucially, it excludes traffic originating from internal, private IP ranges <code>(10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16)</code> to prevent false positives from legitimate internal network activity.</p>
+<p><strong>Threshold</strong>:</p>
+<p>The rule groups events by the source IP address (winlog.event_data.SourceIp.keyword).
+It triggers an alert if the number of unique destination ports (winlog.event_data.DestinationPort.keyword) from a single source IP exceeds 50 within the rule's 5-minute evaluation window.</p>
+<p>In summary, the rule alerts when a single external IP address attempts to connect to 50 or more unique ports on the network in under five minutes.</p>
+<h4 id="ubuntu-host-based">Ubuntu (Host-based)</h4>
+<p>This rule focuses on detecting the execution of common scanning tools on the host itself, which can indicate that a compromised machine is being used for internal reconnaissance.</p>
+<p><strong>Query</strong>:</p>
+<pre><code>event.dataset:auditd.log and event.action:"executed" and (process.args:"nmap" or process.args:"masscan")
+</code></pre>
+<p>This query looks for audit logs showing that the nmap or masscan process was executed.</p>
+<h2 id="simulation-and-validation">Simulation and Validation</h2>
+<p>To validate that these rules work correctly, a port scan can be simulated against a monitored endpoint.</p>
+<h3 id="windows-external-scan">Windows (External Scan)</h3>
+<p><strong>Test Command (PowerShell)</strong>:</p>
+<pre><code>nmap -sT -p- &lt;target_IP&gt;
+</code></pre>
+<p>This command initiates a TCP connect scan (-sT) against all 65,535 ports (-p-) of the <target_IP>. This will generate a large volume of connection attempts from a single source to many distinct ports, satisfying the rule's threshold condition and triggering an alert.</p>
+<h3 id="ubuntu-local-scan">Ubuntu (Local Scan)</h3>
+<p>This command simulates a scan being run from the Ubuntu machine itself, which tests the host-based detection logic.</p>
+<p><strong>Test Command</strong>:</p>
+<pre><code>sudo nmap -sS localhost
+</code></pre>
+<p>This command uses nmap to perform a TCP SYN scan (-sS), a common and fast scanning technique, against the local machine (localhost). This action will be logged by auditd, triggering the host-based rule that detects the execution of the nmap process.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../../setup/art_setup/" class="btn btn-neutral float-left" title="Atomic Red Team"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../phishing/" class="btn btn-neutral float-right" title="Phishing">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../../setup/art_setup/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../phishing/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
